@@ -1,1 +1,164 @@
-test data
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QSOE Systems</title>
+  <meta name="description" content="QSOE Systems — QNX-inspired operating systems, RISC-V systems software, and FPGA work by Yuri Zaporozhets.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sky-cloud c1" aria-hidden="true"></div>
+  <div class="sky-cloud c2" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="site-head">
+      <img class="emblem" src="emblem.svg" alt="" aria-hidden="true">
+      <h1 class="site-title">QSOE&nbsp;Systems</h1>
+      <p class="site-tag">systems software · risc-v · fpga</p>
+
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <a class="tab" id="tab-projects" href="#projects" role="tab" aria-controls="projects" aria-selected="true">Projects</a>
+        <a class="tab" id="tab-services" href="#services" role="tab" aria-controls="services" aria-selected="false">Services</a>
+        <a class="tab" id="tab-about"    href="#about"    role="tab" aria-controls="about"    aria-selected="false">About</a>
+        <a class="tab" id="tab-contact"  href="#contact"  role="tab" aria-controls="contact"  aria-selected="false">Contact</a>
+      </nav>
+    </header>
+
+    <main class="panels">
+
+      <!-- PROJECTS -->
+      <section class="panel is-active" id="projects" role="tabpanel" aria-labelledby="tab-projects" tabindex="0">
+        <h2>QSOE</h2>
+        <p class="lead">A QNX-inspired operating system with selectable kernels.</p>
+
+        <p>QSOE ships in two variants that share one userspace and one build system.
+           <span class="mono">QSOE/N</span> runs on <strong>Skimmer</strong>, a microkernel written
+           from scratch for this project (SMP by design); <span class="mono">QSOE/L</span> runs on
+           <strong>seL4</strong> as its kernel.</p>
+
+        <p>Both are assembled by the <strong>Umbrella</strong> build system, which selects kernel and
+           userspace components Kconfig-style. The userspace is <strong>100% identical</strong> across
+           both variants; the only parts produced per-kernel are <code>taskman</code>, the task
+           manager, and <code>libc.so</code> — the C library, which is around 85% shared at the source
+           level and diverges only at the thin layer where it meets the kernel.</p>
+
+        <p>The design follows the QNX&nbsp;Neutrino tradition: a small kernel with everything else in
+           userspace, synchronous message-passing IPC, and the resource-manager model for services.</p>
+
+        <p>QSOE targets 64-bit RISC-V (<code>RV64</code>, <code>Sv39</code>) on the SiFive HiFive
+           Unmatched (<code>FU740</code>), with QEMU used for day-to-day development. QSOE/N now boots
+           on real hardware. Released under Apache-2.0.</p>
+
+        <div class="meta-row">
+          <a href="https://gitlab.com/qsoe/os">gitlab.com/qsoe/os</a>
+          <a href="https://qsoe-dev.blogspot.com">dev blog</a>
+        </div>
+
+        <h3>Other projects</h3>
+        <ul class="project-list">
+          <li><a class="name" href="https://gitlab.com/gatemate/pc">GateMate PC</a>
+              <span class="desc">— a personal computer built on the Cologne&nbsp;Chip GateMate FPGA.</span></li>
+          <li><a class="name" href="https://gitlab.com/gatemate/s359">GateMate System/359</a>
+              <span class="desc">— an IBM&nbsp;S/360-inspired FPGA implementation of a computing system, with I/O channels and a powerful macroassembler.</span></li>
+          <li><a class="name" href="qrv.html">QRV</a>
+              <span class="desc">— a QNX port to RISC-V (historical); fed hardware bring-up lessons into QSOE/N.</span></li>
+        </ul>
+      </section>
+
+      <!-- SERVICES -->
+      <section class="panel" id="services" role="tabpanel" aria-labelledby="tab-services" tabindex="0">
+        <h2>Services</h2>
+        <p class="lead">Consulting and development in low-level and systems software.</p>
+        <ul class="tidy">
+          <li>Microkernel-based operating systems</li>
+          <li>System libraries and low-level runtime</li>
+          <li>Virtualization for real-time applications</li>
+          <li>RISC-V systems bring-up</li>
+          <li>AI-assisted development for FPGAs</li>
+        </ul>
+        <p style="margin-top:1.4rem;">Engagements range from focused bring-up work to longer-term
+           architecture and implementation. Get in touch to discuss scope.</p>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="panel" id="about" role="tabpanel" aria-labelledby="tab-about" tabindex="0">
+        <h2>About</h2>
+        <p>QSOE Systems is the independent practice of <strong>Yuri Zaporozhets</strong>, a systems
+           software developer with 25+ years of experience building low-level software — kernels,
+           operating systems, runtimes, and the hardware bring-up underneath them.</p>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="panel" id="contact" role="tabpanel" aria-labelledby="tab-contact" tabindex="0">
+        <h2>Contact</h2>
+        <p class="lead">Email is the best way to reach me.</p>
+        <p class="contact-mail"><a href="mailto:yuriz@qsoe.net">yuriz@qsoe.net</a></p>
+        <div class="meta-row">
+          <a href="https://gitlab.com/qsoe">GitLab</a>
+          <a href="https://github.com/qsoe-dev">GitHub</a>
+          <a href="https://qsoe-dev.blogspot.com">Blog 1</a>
+          <a href="https://r-tty.blogspot.com">Blog 2</a>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>© <span id="year">2026</span> QSOE Systems</footer>
+  </div>
+
+  <script>
+    (function () {
+      var body = document.body;
+      body.classList.add('js');
+
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+      var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+
+      function activate(id, focusPanel) {
+        tabs.forEach(function (t) {
+          t.setAttribute('aria-selected', t.getAttribute('aria-controls') === id ? 'true' : 'false');
+        });
+        panels.forEach(function (p) {
+          var on = p.id === id;
+          p.classList.toggle('is-active', on);
+          if (on && focusPanel) p.focus();
+        });
+      }
+
+      tabs.forEach(function (tab, i) {
+        tab.addEventListener('click', function (e) {
+          e.preventDefault();
+          var id = tab.getAttribute('aria-controls');
+          activate(id, false);
+          history.replaceState(null, '', '#' + id);
+        });
+        // left/right arrow navigation across the tablist
+        tab.addEventListener('keydown', function (e) {
+          var next;
+          if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+          else if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+          if (next) {
+            e.preventDefault();
+            next.focus();
+            activate(next.getAttribute('aria-controls'), false);
+            history.replaceState(null, '', '#' + next.getAttribute('aria-controls'));
+          }
+        });
+      });
+
+      // deep-link support: open the section named in the URL hash
+      var initial = (location.hash || '').replace('#', '');
+      if (initial && document.getElementById(initial)) {
+        activate(initial, false);
+      }
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+    })();
+  </script>
+</body>
+</html>
