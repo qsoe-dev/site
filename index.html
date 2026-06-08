@@ -41,8 +41,8 @@
            from scratch for this project (SMP by design); <span class="mono">QSOE/L</span> runs on
            <strong>seL4</strong> as its kernel.</p>
 
-        <p>Both are assembled by the <strong>Umbrella</strong> build system, which selects kernel and
-           userspace components Kconfig-style. The userspace is <strong>100% identical</strong> across
+        <p>Both variants, when compiled, offer the kernel and initrd files directly usable in
+           e.g. U-Boot loader. The userspace is <strong>100% identical</strong> across
            both variants; the only parts produced per-kernel are <code>taskman</code>, the task
            manager, and <code>libc.so</code> — the C library, which is around 85% shared at the source
            level and diverges only at the thin layer where it meets the kernel.</p>
