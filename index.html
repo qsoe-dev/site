@@ -10,6 +10,40 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    .folds { margin-top: 1.8rem; }
+    .fold { border-top: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold:last-child { border-bottom: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold > summary {
+      list-style: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      padding: 0.95rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      user-select: none;
+    }
+    .fold > summary::-webkit-details-marker { display: none; }
+    .fold > summary::before {
+      content: "\25B8";
+      color: var(--accent);
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+    .fold[open] > summary::before { transform: rotate(90deg); }
+    .fold[open] > summary { color: var(--ink); }
+    .fold > summary:hover { color: var(--accent); }
+    .fold-body { padding: 0 0 1.05rem 1.45rem; }
+    .fold-body p { margin: 0; color: var(--ink-soft); }
+    @media (prefers-reduced-motion: reduce) {
+      .fold > summary::before { transition: none; }
+    }
+  </style>
 </head>
 <body>
   <div class="sky-cloud c1" aria-hidden="true"></div>
@@ -22,7 +56,8 @@
       <p class="site-tag">systems software · risc-v · fpga</p>
 
       <nav class="tabs" role="tablist" aria-label="Sections">
-        <a class="tab" id="tab-projects" href="#projects" role="tab" aria-controls="projects" aria-selected="true">Projects</a>
+        <a class="tab" id="tab-qsoe"     href="#qsoe"     role="tab" aria-controls="qsoe"     aria-selected="true">QSOE OS</a>
+        <a class="tab" id="tab-other"    href="#other"    role="tab" aria-controls="other"    aria-selected="false">Other projects</a>
         <a class="tab" id="tab-services" href="#services" role="tab" aria-controls="services" aria-selected="false">Services</a>
         <a class="tab" id="tab-about"    href="#about"    role="tab" aria-controls="about"    aria-selected="false">About</a>
         <a class="tab" id="tab-contact"  href="#contact"  role="tab" aria-controls="contact"  aria-selected="false">Contact</a>
@@ -31,8 +66,8 @@
 
     <main class="panels">
 
-      <!-- PROJECTS -->
-      <section class="panel is-active" id="projects" role="tabpanel" aria-labelledby="tab-projects" tabindex="0">
+      <!-- QSOE OS -->
+      <section class="panel is-active" id="qsoe" role="tabpanel" aria-labelledby="tab-qsoe" tabindex="0">
         <h2>QSOE</h2>
         <p class="lead">A QNX-inspired operating system with selectable kernels.</p>
 
@@ -59,7 +94,26 @@
           <a href="https://qsoe-dev.blogspot.com">dev blog</a>
         </div>
 
-        <h3>Other projects</h3>
+        <div class="folds">
+          <details class="fold">
+            <summary>Installation</summary>
+            <div class="fold-body"><p>Information will be added soon.</p></div>
+          </details>
+          <details class="fold">
+            <summary>Documentation</summary>
+            <div class="fold-body"><p>Information will be added soon.</p></div>
+          </details>
+          <details class="fold">
+            <summary>Additional resources</summary>
+            <div class="fold-body"><p>Information will be added soon.</p></div>
+          </details>
+        </div>
+      </section>
+
+      <!-- OTHER PROJECTS -->
+      <section class="panel" id="other" role="tabpanel" aria-labelledby="tab-other" tabindex="0">
+        <h2>Other projects</h2>
+        <p class="lead">Earlier and adjacent work.</p>
         <ul class="project-list">
           <li><a class="name" href="https://gitlab.com/gatemate/pc">GateMate PC</a>
               <span class="desc">— a personal computer built on the Cologne&nbsp;Chip GateMate FPGA.</span></li>
