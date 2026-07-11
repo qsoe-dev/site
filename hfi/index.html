@@ -127,6 +127,20 @@
       border-color: var(--accent-deep);
     }
 
+    /* ---- photograph: single, full width ---- */
+    .shot { margin: 1.3rem 0 0.3rem; }
+    .shot img {
+      width: 100%; height: auto; display: block;
+      border-radius: 10px;
+      border: 1px solid var(--panel-edge);
+      box-shadow: 0 14px 34px -20px var(--shadow);
+    }
+    .shot figcaption {
+      font-family: var(--font-mono); font-size: 0.74rem;
+      color: var(--ink-soft); margin-top: 0.6rem; letter-spacing: 0.01em;
+      text-align: center;
+    }
+
     .watch { font-family: var(--font-mono); font-size: 0.85rem; margin-top: 1.2rem; }
 
     @media (max-width: 560px) {
@@ -186,10 +200,9 @@
         </div>
 
         <div class="ctas">
-          <!-- TODO: replace # with the real YouTube URL for the HFI BIOS 1.0 demo -->
-          <a class="btn primary" href="#" rel="noopener">
+          <a class="btn primary" href="https://youtu.be/v4k1tLbnZMs" target="_blank" rel="noopener">
             <span class="play">▶</span> Watch HFI&nbsp;BIOS boot the Unmatched</a>
-          <a class="btn ghost" href="./HFI-WhitePaper.pdf">Read the white&nbsp;paper (PDF)</a>
+          <a class="btn ghost" href="./HFI-WhitePaper.pdf" target="_blank" rel="noopener">Read the white&nbsp;paper (PDF)</a>
         </div>
       </section>
 
@@ -250,6 +263,12 @@
           purpose: if a scavenged Kepler card can present a coherent BIOS on RISC-V, a
           board with an integrated display controller is the easy one.</p>
 
+        <figure class="shot">
+          <img src="./img/hfi-post.jpg" width="872" height="703"
+               alt="Photograph of the HFI BIOS power-on screen running on a SiFive HiFive Unmatched: the blue RISC-V logo, board and CPU inventory, USB and NVMe enumeration, and the prompt to press Del to run Set-Up.">
+          <figcaption>HFI&nbsp;BIOS on a SiFive HiFive Unmatched — the actual power-on screen, photographed.</figcaption>
+        </figure>
+
         <p>What <strong>HFI&nbsp;BIOS v1.0</strong> puts on the screen today:</p>
         <ul class="tidy">
           <li><strong>A power-on greeting</strong> — the VideoBIOS identity, the main
@@ -261,9 +280,14 @@
             a keystroke away for when you want it.</li>
         </ul>
 
+        <figure class="shot">
+          <img src="./img/hfi-setup.jpg" width="904" height="489"
+               alt="Photograph of the HFI BIOS System Configuration Editor: a two-panel Set-Up screen — Standard Settings, Advanced Settings, PC Health Status, System Information and Firmware Version on the left; Boot Order Select, Load Default Settings and the exit options on the right.">
+          <figcaption>The Set-Up editor — HFI&nbsp;BIOS's two-panel System Configuration Editor, in the classic BIOS idiom.</figcaption>
+        </figure>
+
         <p class="watch">▶ Watch it happen:
-          <!-- TODO: replace # with the real YouTube URL -->
-          <a href="#" rel="noopener">HFI&nbsp;BIOS boots the Unmatched</a> — POST, Set-Up,
+          <a href="https://youtu.be/v4k1tLbnZMs" target="_blank" rel="noopener">HFI&nbsp;BIOS boots the Unmatched</a> — POST, Set-Up,
           and finally mr-bml on screen.</p>
       </section>
 
