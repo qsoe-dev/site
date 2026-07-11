@@ -96,6 +96,7 @@
 
       <nav class="tabs" role="tablist" aria-label="Sections">
         <a class="tab" id="tab-qsoe"     href="#qsoe"     role="tab" aria-controls="qsoe"     aria-selected="true">QSOE OS</a>
+        <a class="tab" href="hfi/index.html">HFI</a>
         <a class="tab" id="tab-other"    href="#other"    role="tab" aria-controls="other"    aria-selected="false">Other projects</a>
         <a class="tab" id="tab-services" href="#services" role="tab" aria-controls="services" aria-selected="false">Services</a>
         <a class="tab" id="tab-about"    href="#about"    role="tab" aria-controls="about"    aria-selected="false">About</a>
@@ -368,7 +369,7 @@ make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, vi
       var body = document.body;
       body.classList.add('js');
 
-      var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab[aria-controls]'));
       var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
 
       function activate(id, focusPanel) {

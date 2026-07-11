@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFI — Harmonic Firmware Initiative · QSOE Systems</title>
+  <meta name="description" content="HFI, the Harmonic Firmware Initiative: an open, U-Boot–based firmware experience layer that gives any RISC-V board a real power-on screen, boot menus, and a Set-Up editor. By QSOE Systems.">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* ---- HFI page-specific components, expressed in the shared tokens ---- */
+
+    /* stack the sub-page panels (home shows one at a time; here they flow) */
+    .panels .panel + .panel { margin-top: 1.5rem; }
+
+    /* current-page marker for the top nav (bolder, echoing the main site's
+       active tab, which uses aria-selected) */
+    .tab[aria-current="page"] { color: var(--ink); font-weight: 600; }
+    .tab[aria-current="page"]::before,
+    .tab[aria-current="page"]::after { opacity: 1; color: var(--accent-deep); }
+
+    /* eyebrow label above a section heading (mono, like .panel h3 but no rule) */
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      margin: 0 0 0.5rem;
+    }
+    .hero-h {
+      font-size: clamp(1.9rem, 5vw, 2.3rem);
+      line-height: 1.15;
+      margin: 0.3rem 0 0.4rem;
+    }
+
+    /* ---- POST-screen mockup: a "real screen" against the frosted panels ---- */
+    .post {
+      margin: 0.4rem 0 1.6rem;
+      background: #102841;                 /* deep slate-navy, keyed to --ink */
+      color: #d3e0ee;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 1.15rem 1.3rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.85;
+      overflow-x: auto;
+      box-shadow: 0 18px 40px -24px var(--shadow);
+    }
+    .post .l   { white-space: pre; display: block; }
+    .post .dim { color: #7f93b4; }
+    .post .ok  { color: #54cd82; }
+    .post .blue{ color: #5a9bff; }
+    .post .yel { color: #e8c34a; }
+    .post .risc{ float: right; color: #5a9bff; font-weight: 600; letter-spacing: 0.04em; }
+    .cursor {
+      display: inline-block; width: 0.6em; height: 1.05em; vertical-align: -2px;
+      background: #d3e0ee; margin-left: 2px; animation: blink 1.05s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ---- call-to-action buttons, in the accent palette ---- */
+    .ctas { display: flex; gap: 0.8rem; flex-wrap: wrap; margin: 1.3rem 0 0.2rem; }
+    .ctas .btn {
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      padding: 0.62rem 1.15rem;
+      border-radius: 9px;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      text-decoration: none;
+      border: 1.5px solid var(--accent-deep);
+      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+    .ctas .btn.primary { background: var(--accent-deep); color: #fff; }
+    .ctas .btn.primary:hover { background: var(--accent); transform: translateY(-1px); }
+    .ctas .btn.ghost { background: rgba(255,255,255,0.45); color: var(--accent-deep); }
+    .ctas .btn.ghost:hover { background: rgba(255,255,255,0.78); transform: translateY(-1px); }
+    .ctas .btn .play { font-size: 0.7rem; transform: translateY(0.5px); }
+
+    /* ---- pull-quote ---- */
+    .pull {
+      font-family: var(--font-display);
+      font-style: italic;
+      color: var(--accent-deep);
+      font-size: 1.28rem;
+      line-height: 1.35;
+      margin: 0.2rem 0 1rem;
+    }
+
+    /* ---- layer diagram: five bars joined by a vertical spine ---- */
+    .layers { margin: 1.1rem 0 0.3rem; }
+    .layer {
+      position: relative;
+      text-align: center;
+      background: rgba(14, 124, 147, 0.06);
+      border: 1px solid rgba(14, 124, 147, 0.25);
+      border-radius: 10px;
+      padding: 0.62rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+    .layer + .layer { margin-top: 1.35rem; }
+    .layer + .layer::before {              /* the spine segment above each bar */
+      content: "";
+      position: absolute; left: 50%; top: -1.35rem;
+      width: 2px; height: 1.35rem; margin-left: -1px;
+      background: var(--accent); opacity: 0.5;
+    }
+    .layer .t { font-weight: 600; color: var(--accent-deep); }
+    .layer .s { color: var(--ink-soft); }
+    .layer.is-hfi {                        /* the reference software, highlighted */
+      background: var(--code-bg);
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px -12px var(--shadow);
+    }
+    .layer.is-contract {                   /* the interface — the shared contract */
+      border-style: dashed;
+      border-color: var(--accent-deep);
+    }
+
+    .watch { font-family: var(--font-mono); font-size: 0.85rem; margin-top: 1.2rem; }
+
+    @media (max-width: 560px) {
+      .post .risc { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; }
+    }
+  </style>
+</head>
+<body class="subpage">
+  <div class="sky-cloud c1" aria-hidden="true"></div>
+  <div class="sky-cloud c2" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="site-head">
+      <a href="../index.html"><img class="emblem" src="../emblem.svg" alt="" aria-hidden="true"></a>
+      <h1 class="site-title"><a href="../index.html">QSOE&nbsp;Systems</a></h1>
+      <p class="site-tag">harmonic firmware initiative</p>
+
+      <nav class="tabs" aria-label="Sections">
+        <a class="tab" href="../index.html#qsoe">QSOE OS</a>
+        <a class="tab" href="index.html" aria-current="page">HFI</a>
+        <a class="tab" href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="panels">
+
+      <!-- ===================== WHAT IS IT ===================== -->
+      <section class="panel">
+        <div class="eyebrow">What is it?</div>
+        <p class="lead"><strong>Harmonic Firmware Initiative (HFI)</strong> aims to
+          create, standardize, and maintain — for RISC-V systems — something the x86
+          world has taken for granted for forty years: a genuine power-on firmware
+          experience. You switch the machine on and it <em>presents itself</em> on its
+          own display — a firmware identity and POST screen, hardware enumeration, a
+          Set-Up configuration editor, and boot selection — the way every PC has since
+          the 1980s, and the way no bare RISC-V board does today.</p>
+        <p>HFI is that effort itself: the vision, the design decisions, and the
+          coordination. It defines the approach, standardizes the interface board makers
+          build to, maintains a reference implementation, and spreads the know-how. The
+          software it produces has its own name — <strong>HFI BIOS</strong> — and the
+          screen below is what that software draws.</p>
+
+        <div class="post" role="img"
+             aria-label="A simulated HFI BIOS power-on screen: HFI RISC-V 64-bit System BIOS version 1.0, QSOE Systems. Board SiFive HiFive Unmatched, 16384 MB OK. USB devices detected OK, NVMe storage scanned. Press DEL to run Set-Up.">
+<span class="l"><span class="risc">RISC-V</span><span class="blue">HFI</span> RISC-V 64-bit System BIOS  <span class="dim">version 1.0</span></span>
+<span class="l"><span class="dim">Copyright (c) 2026 </span><span class="blue">QSOE Systems</span><span class="dim">.  All rights reserved.</span></span>
+<span class="l">&nbsp;</span>
+<span class="l">Board: SiFive HiFive Unmatched (FU740)</span>
+<span class="l">Memory: 16384 MB <span class="ok">OK</span></span>
+<span class="l">Detecting USB devices ........ <span class="ok">OK</span></span>
+<span class="l">Scanning NVMe storage ........ <span class="ok">done</span></span>
+<span class="l">&nbsp;</span>
+<span class="l">Press <span class="yel">DEL</span> to run Set-Up<span class="cursor" aria-hidden="true"></span></span>
+        </div>
+
+        <div class="ctas">
+          <!-- TODO: replace # with the real YouTube URL for the HFI BIOS 1.0 demo -->
+          <a class="btn primary" href="#" rel="noopener">
+            <span class="play">▶</span> Watch HFI&nbsp;BIOS boot the Unmatched</a>
+          <a class="btn ghost" href="./HFI-WhitePaper.pdf">Read the white&nbsp;paper (PDF)</a>
+        </div>
+      </section>
+
+      <!-- ===================== THE SOFTWARE ===================== -->
+      <section class="panel">
+        <div class="eyebrow">The software</div>
+        <h2>HFI&nbsp;BIOS</h2>
+        <p>The initiative's reference software is <strong>HFI&nbsp;BIOS</strong>, in full
+          <em>HFI RISC-V 64-bit System BIOS</em>. It is a firmware experience
+          <em>layer</em> built as an extension of U-Boot, not a replacement for it — it
+          reads the machine through U-Boot's own subsystems and draws it on the board's
+          own display.</p>
+        <p>Without a layer like this, a RISC-V board is in effect headless: switch it on
+          and the monitor stays dark while the firmware talks only down a serial cable to
+          a second computer. HFI&nbsp;BIOS gives it instead what a PC has always shown on
+          its own screen — a power-on identity and POST screen, boot-device and boot-order
+          menus, a Set-Up configuration editor in the idiom of a classic system BIOS, and
+          a system console underneath for the moments you want the prompt.</p>
+        <p><em>Isn't that what UEFI is for?</em> In a sense, yes — UEFI, in its open
+          <strong>TianoCore</strong> (EDK&nbsp;II) form, offers a comparable Set-Up
+          screen and boot manager, and it is the road the x86 world took. But it is an
+          entire second firmware environment, large and heavy, and it does not sit
+          neatly inside the U-Boot that RISC-V boards already run. HFI&nbsp;BIOS takes
+          the opposite path: not a massive stack bolted alongside U-Boot, but a small
+          layer that extends the U-Boot already there.</p>
+      </section>
+
+      <!-- ===================== HARMONIZATION ===================== -->
+      <section class="panel">
+        <div class="eyebrow">Harmonization</div>
+        <h2>The unified VideoBIOS interface</h2>
+        <p>HFI&nbsp;BIOS drives each board's display through a single, unified interface —
+          the IBM PC's option-ROM idea, brought to RISC-V. On the PC that code lived in a
+          ROM chip on the graphics card; here it lives on the storage the board already
+          carries, on MMC or NVMe.</p>
+        <p class="pull">Port that interface once for a display controller, and every
+          board that uses it inherits the whole experience above — unchanged.</p>
+        <p>That is the harmonization the name points to: one interface, many boards, and
+          the same firmware experience carried forward to the next SoC.</p>
+
+        <div class="layers" role="img"
+             aria-label="The boot stack, top to bottom: the operating system; HFI BIOS providing POST, menus, Set-Up and console; the unified VideoBIOS interface on MMC or NVMe, which is the contract; U-Boot and OpenSBI; and the board silicon.">
+          <div class="layer"><span class="t">Operating system</span> <span class="s">· the boot target</span></div>
+          <div class="layer is-hfi"><span class="t">HFI&nbsp;BIOS</span> <span class="s">· POST · menus · Set-Up · console</span></div>
+          <div class="layer is-contract"><span class="t">Unified VideoBIOS interface</span> <span class="s">· on MMC / NVMe — the contract</span></div>
+          <div class="layer"><span class="t">U-Boot · OpenSBI</span></div>
+          <div class="layer"><span class="t">Board silicon</span> <span class="s">· CPU · PCIe · display controller · storage</span></div>
+        </div>
+      </section>
+
+      <!-- ===================== RUNNING TODAY ===================== -->
+      <section class="panel">
+        <div class="eyebrow">Running today</div>
+        <h2>The hardest case, first</h2>
+        <p>The reference implementation runs on a SiFive HiFive Unmatched, driving its
+          display through a discrete NVIDIA GK-208 over PCIe — brought up natively inside
+          U-Boot, with no legacy VGA and no x86 assumptions. It is the hardest case on
+          purpose: if a scavenged Kepler card can present a coherent BIOS on RISC-V, a
+          board with an integrated display controller is the easy one.</p>
+
+        <p>What <strong>HFI&nbsp;BIOS v1.0</strong> puts on the screen today:</p>
+        <ul class="tidy">
+          <li><strong>A power-on greeting</strong> — the VideoBIOS identity, the main
+            POST screen, the memory count, and USB / NVMe enumeration.</li>
+          <li><strong>A configuration editor</strong> — the Set-Up screen, in the idiom
+            of the classic Award BIOS: standard and advanced settings, PC Health Status,
+            boot order, and flashing of the NOR firmware.</li>
+          <li><strong>A system console</strong> — the U-Boot prompt underneath it all,
+            a keystroke away for when you want it.</li>
+        </ul>
+
+        <p class="watch">▶ Watch it happen:
+          <!-- TODO: replace # with the real YouTube URL -->
+          <a href="#" rel="noopener">HFI&nbsp;BIOS boots the Unmatched</a> — POST, Set-Up,
+          and finally mr-bml on screen.</p>
+      </section>
+
+      <!-- ===================== INITIATIVE ===================== -->
+      <section class="panel">
+        <div class="eyebrow">The invitation</div>
+        <h2>An open initiative</h2>
+        <p>HFI is offered as an initiative, not a product to license. Its reference
+          software is open by construction — HFI&nbsp;BIOS links U-Boot and carries
+          U-Boot's licence — and QSOE Systems stewards the whole: the interface
+          specification, a high-quality reference implementation, and the porting to new
+          controllers.</p>
+        <p>Board vendors are invited to adopt it, to co-develop the interface for their
+          own display controllers, and to be — for their platform — the first to ship a
+          board that greets its user like a finished computer. Harmonization is not a
+          standard handed down from above; it is a shared interface any vendor can build
+          to.</p>
+        <a class="back-link" href="../index.html">Back to QSOE Systems</a>
+      </section>
+
+    </main>
+
+    <footer>© 2026 QSOE Systems</footer>
+  </div>
+</body>
+</html>
