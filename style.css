@@ -218,3 +218,18 @@ footer {
   body.js .panel.is-active { animation: none; }
   .tab { transition: none; }
 }
+
+/* A screenshot or photograph set into a page's flow.  The HFI page carries
+   its own copy of these rules; new pages take them from here. */
+.shot { margin: 1.3rem 0 0.3rem; }
+.shot img {
+  width: 100%; height: auto; display: block;
+  border-radius: 10px;
+  border: 1px solid var(--panel-edge);
+  box-shadow: 0 14px 34px -20px var(--shadow);
+}
+.shot figcaption {
+  font-family: var(--font-mono); font-size: 0.74rem;
+  color: var(--ink-soft); margin-top: 0.6rem; letter-spacing: 0.01em;
+  text-align: center;
+}
