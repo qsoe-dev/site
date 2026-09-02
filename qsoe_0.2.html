@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QSOE 0.2 — release notes · QSOE Systems</title>
+  <meta name="description" content="QSOE 0.2 release notes: a video console with a USB keyboard, a writable filesystem, QSP transparent distributed networking, a second silicon target, and everything else that changed since 0.1.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---- release-notes page, expressed in the shared tokens ---- */
+
+    .panels .panel + .panel { margin-top: 1.5rem; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      margin: 0 0 0.4rem;
+    }
+    .panel h2.rel {
+      font-size: clamp(1.9rem, 5vw, 2.4rem);
+      line-height: 1.15;
+      margin: 0 0 0.3rem;
+    }
+    .relmeta {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--accent-deep);
+      margin: 0 0 1.4rem !important;
+      opacity: 0.9;
+    }
+
+    /* component-set table */
+    .vtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.4rem 0 0.4rem;
+    }
+    .vtable th, .vtable td {
+      text-align: left;
+      padding: 0.42rem 0.7rem 0.42rem 0;
+      border-bottom: 1px solid rgba(14, 124, 147, 0.16);
+      color: var(--ink-soft);
+    }
+    .vtable th {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      font-weight: 500;
+    }
+    .vtable td.v { font-family: var(--font-mono); white-space: nowrap; }
+    .vtable td.now { color: var(--ink); font-weight: 500; }
+    .vtable .what { color: var(--ink); }
+
+    /* table of contents */
+    .toc {
+      list-style: none;
+      margin: 0.6rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+    }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* a highlight: bold lead-in, then prose */
+    .hl { margin: 0 0 1.15rem; color: var(--ink-soft); }
+    .hl b { color: var(--ink); }
+    .hl:last-child { margin-bottom: 0; }
+
+    /* nested detail under a tidy bullet */
+    ul.tidy li p { margin: 0.25rem 0 0; }
+    ul.tidy ul.tidy { margin-left: 1rem; }
+
+    .note {
+      margin: 1.2rem 0 0;
+      padding: 0.7rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      border-radius: 0 8px 8px 0;
+      color: var(--ink) !important;
+      font-size: 0.94rem;
+    }
+
+    pre.cmd {
+      margin: 0.5rem 0 1rem;
+      padding: 0.75rem 0.95rem;
+      background: var(--code-bg);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--ink);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    pre.cmd .c { color: var(--accent-deep); }
+
+    .panel h3:first-of-type { margin-top: 1.4rem; }
+
+    /* ---- collapsible sections, same idiom as the front page ---- */
+    .folds { margin-top: 1.4rem; }
+    .fold { border-top: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold:last-child { border-bottom: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold > summary {
+      list-style: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      padding: 0.95rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      user-select: none;
+    }
+    .fold > summary::-webkit-details-marker { display: none; }
+    .fold > summary::before {
+      content: "\25B8";
+      color: var(--accent);
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+    .fold[open] > summary::before { transform: rotate(90deg); }
+    .fold[open] > summary { color: var(--ink); }
+    .fold > summary:hover { color: var(--accent); }
+    .fold-body { padding: 0 0 1.05rem 1.45rem; }
+    .fold-body p { margin: 0 0 1rem; color: var(--ink-soft); }
+    .fold-body p.lead { color: var(--ink); }
+    .fold-body ul.tidy { margin: 0.4rem 0 1rem; }
+    .fold-body h3:first-of-type { margin-top: 0.6rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .fold > summary::before { transition: none; }
+    }
+  </style>
+</head>
+<body class="subpage">
+  <div class="sky-cloud c1" aria-hidden="true"></div>
+  <div class="sky-cloud c2" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="site-head">
+      <a href="index.html"><img class="emblem" src="emblem.svg" alt="" aria-hidden="true"></a>
+      <h1 class="site-title"><a href="index.html">QSOE&nbsp;Systems</a></h1>
+      <nav class="tabs">
+        <a class="tab" href="index.html">QSOE OS</a>
+        <a class="tab" href="hfi/index.html">HFI</a>
+        <a class="tab" href="index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="panels">
+
+      <!-- ================= OVERVIEW ================= -->
+      <section class="panel">
+        <p class="eyebrow">Release notes</p>
+        <h2 class="rel">QSOE&nbsp;0.2</h2>
+        <p class="lead">A screen, a keyboard, a writable filesystem — and two machines that can
+           see each other's files.</p>
+        <p class="relmeta">September 2026 · succeeds 0.1 (June 2026) · Apache-2.0</p>
+
+        <p>0.1 was a system you watched over a serial cable. 0.2 is one you can sit at. A text
+           console paints on a graphics card the firmware hands over, a USB keyboard types into it,
+           the shell has pipelines and a two-panel file manager, and there is finally somewhere to
+           write a file. Underneath, a second silicon target joined the first, three Ethernet
+           drivers share one descriptor ring, and <strong>QSP</strong> — transparent distributed
+           networking — lets one board open a path on another as if it were local.</p>
+
+        <p>Both variants moved together, as they are meant to. Everything in userspace is byte-for-byte
+           identical on the two kernels; where <span class="mono">QSOE/L</span> lagged
+           <span class="mono">QSOE/N</span> during the cycle, it is said so below rather than implied
+           away.</p>
+
+        <h3>The component set</h3>
+        <table class="vtable">
+          <thead>
+            <tr><th>Component</th><th>What it is</th><th>0.1</th><th>0.2</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what"><code>nq</code></td>
+                <td>QSOE/N — the Skimmer microkernel and its taskman</td>
+                <td class="v">0.17</td><td class="v now">0.26</td></tr>
+            <tr><td class="what"><code>lq</code></td>
+                <td>QSOE/L — the seL4 taskman and its kernel seam</td>
+                <td class="v">0.14</td><td class="v now">0.22</td></tr>
+            <tr><td class="what"><code>libc</code></td>
+                <td>the shared C library and <code>crt0</code></td>
+                <td class="v">0.6</td><td class="v now">0.15</td></tr>
+            <tr><td class="what"><code>quser</code></td>
+                <td>the shared userspace: shell, drivers, servers, utilities</td>
+                <td class="v">0.5</td><td class="v now">0.14</td></tr>
+            <tr><td class="what"><code>mr-bml</code></td>
+                <td>the bootloader (separate project, shipped alongside)</td>
+                <td class="v">0.5.2</td><td class="v now">0.9</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.9rem;">The umbrella records the tested set in
+           <code>component.list</code>; <code>make prepare</code> checks out exactly these.</p>
+
+        <h3>On this page</h3>
+        <ul class="toc">
+          <li><a href="#highlights">Highlights</a></li>
+          <li><a href="#changes">Full change list</a></li>
+          <li><a href="#gaps">Known gaps</a></li>
+          <li><a href="#get">Getting it</a></li>
+        </ul>
+      </section>
+
+      <!-- ================= HIGHLIGHTS ================= -->
+      <section class="panel" id="highlights">
+        <h2>Highlights</h2>
+        <p class="lead">Ten things that make 0.2 a different system to use than 0.1.</p>
+
+        <p class="hl"><b>A console on the glass.</b> <code>devc-hficon</code> paints a text console
+           on a graphics controller the HFI firmware hands over — a GK208 on the Unmatched, the
+           SoC display block on the K3 — and a <code>login:</code> prompt appears on the monitor.
+           A read on that device <em>defers</em> rather than returning end-of-file, which is what
+           makes a screen a terminal before any keyboard exists: a getty prints its banner once
+           and waits, instead of looping forever on an EOF that was a lie about capability.</p>
+
+        <p class="hl"><b>A USB keyboard types into it.</b> <code>devu-xhci</code> finds an xHCI
+           controller either on the PCI bus or in the device tree, enumerates a HID keyboard, and
+           injects characters into the console's parked read. Hot-plug is rescanned while the
+           system runs. Verified on hardware with a 1989 DEC keyboard through a PS/2 adapter.</p>
+
+        <p class="hl"><b>QSP — transparent distributed networking.</b>
+           <code>open("/net/node2/dev/ser1")</code> opens the serial port on the <em>other</em>
+           machine, and the resource manager over there is never told anything happened: it sees an
+           ordinary local client. That is what makes every driver already written work across the
+           net unmodified. The relay deliberately does not decode — exactly two message types are
+           looked at, the open that names the resource and the close that releases it, and
+           everything else crosses as bytes, so an application's own private protocol passes
+           through unchanged.</p>
+
+        <p class="hl"><b>A writable filesystem.</b> <code>fs-tmpfs</code> is the first place in QSOE
+           you can create a file. It reconstructs RFS — a late-1990s block-map-and-B-tree design —
+           in fresh C, with its store as a directory of 2&nbsp;MiB chunks mapped as blocks are first
+           allocated: QSOE has no demand paging, so a 256&nbsp;MiB mount must not cost 256&nbsp;MiB
+           of frames before a file exists. Names grow to 108 characters and the largest file to
+           259&nbsp;MiB.</p>
+
+        <p class="hl"><b>A second silicon target.</b> QSOE/N boots on the SpacemiT K3 Pico-ITX —
+           sixteen harts, pure AIA with no PLIC anywhere on the SoC, DRAM at 4&nbsp;GiB, heterogeneous
+           application and AI cores, and a firmware that runs management cores of its own. Most of
+           that work was finding out which of the things Skimmer "knew" about a RISC-V board were
+           facts and which were habits.</p>
+
+        <p class="hl"><b>Ethernet, three controllers, one ring.</b> <code>devn-gem</code> (Cadence
+           GEM, FU740), <code>devn-dwmac</code> (DesignWare EQoS, K3 and VisionFive&nbsp;2) and
+           <code>devn-virtio</code> (QEMU) all sit behind <code>libnetdev</code>: one physically
+           contiguous, <em>uncached</em> descriptor ring published to the client, free-running
+           producer and consumer counters, doorbells as pulses. A frame is written once and read in
+           place. The old read/write path was deleted rather than kept alongside, because two ways
+           to move a frame means one of them rots.</p>
+
+        <p class="hl"><b>Sessions, pipelines and job control.</b> A machine with two consoles needs
+           "my terminal" to mean something per-process, so taskman gained a refcounted session with
+           a process group and a controlling terminal, and <code>/dev/tty</code> is answered from
+           the asking process's session rather than from a global alias. On top of that:
+           <code>a | b</code> without <code>fork()</code>, <code>$(...)</code> into a capture object,
+           Ctrl-C that reaches the command and then the shell, and a <code>ps</code> that says which
+           console a process is on and why a thread is blocked.</p>
+
+        <p class="hl"><b>The two-panel file manager, two releases early.</b> An orthodox
+           Norton/Midnight-Commander-style manager is built into <code>qsh</code> — Ctrl-O enters
+           the panels — with tagging, an F-key bar, a live command line, and <code>qedit</code>, a
+           full-screen editor, behind F4. The roadmap had this at 0.4; the writable filesystem
+           arriving early brought it forward.</p>
+
+        <p class="hl"><b>A server can find out who is talking to it.</b> Every client of every server
+           used to be root — not as a policy, as a constant in the framework's open path. Both kernels
+           carry the sender's identity now, each by the means it allows. QSOE/N reads the credentials
+           at send time and delivers them with every message, so they are <em>current</em>: getty
+           attaches the console as root, login drops privilege, and the shell inherits — a credential
+           frozen at attach would have reported root for every keystroke of the session. seL4 gives a
+           receiver a badge and nothing else, so QSOE/L stamps the identity into the connection badge
+           at <code>ConnectAttach</code>, the one moment taskman can, minted send-only so the client
+           cannot re-badge it. And the answer is acted on: <code>fs-qrv</code> checks the permission
+           triads, so an ordinary user reading <code>/etc/shadow</code> is refused on both kernels.</p>
+
+        <p class="hl"><b><code>su</code> without <code>setuid</code>.</b> On Unix, <code>su</code> is
+           setuid-root because the credential authority is the kernel while the password database is
+           userspace policy the kernel knows nothing about; the setuid bit exists to bridge that
+           separation. QSOE has no separation to bridge. taskman owns the credential table
+           <em>and</em> the password database, so <code>su</code> is an ordinary unprivileged program:
+           it sends a name and a password, taskman checks them against its own cache and, if they
+           match, changes the caller's credentials itself. The stored hash never leaves taskman —
+           which is why the filesystem's permission check on <code>/etc/shadow</code> is a second line
+           of defense rather than the only one — and QSOE never grows the setuid-plus-dynamic-loader
+           combination behind Unix's ugliest privilege-escalation history. There is no setuid bit in
+           this system, and nothing needed one.</p>
+      </section>
+
+      <!-- ================= KERNELS ================= -->
+      <!-- ================= THE FULL CHANGE LIST ================= -->
+      <section class="panel" id="changes">
+        <h2>The full change list</h2>
+        <p class="lead">Everything that changed since 0.1, by area. Open the parts you want —
+           or open them all and read it as one document.</p>
+        <div class="folds">
+          <details class="fold" id="kernels">
+            <summary>Kernels and IPC</summary>
+            <div class="fold-body">
+          <p class="lead">Skimmer, the seL4 seam, and the message primitives above both.</p>
+
+          <h3>Skimmer — new capability</h3>
+          <ul class="tidy">
+            <li><strong>Wired platform interrupts, without a new syscall.</strong>
+                <code>QSOE_INTR_FLAGS_WIRED</code> tells <code>InterruptAttachThread</code> that the
+                number it was given is a raw controller source rather than a QSOE vector — which is
+                what a device tree actually gives a driver.</li>
+            <li><strong>The attach says which hart it bound the source to.</strong> The kernel has the
+                hart in its hand at that moment, so returning it costs nothing, while asking afterwards
+                costs a taskman round trip. <code>devb-nvme</code> aims its MSI-X table entry at the
+                answer. The same change finally maintains <code>irq_iid</code>, which had been
+                documented but never kept.</li>
+            <li><strong>Zicbom cache maintenance in U-mode</strong>, where the bus is not coherent.
+                Without it a userspace driver on the K3 cannot own a DMA descriptor at all.</li>
+            <li><strong><code>SYS_MSG_READV</code> and <code>SYS_MSG_WRITEV</code></strong> — vectored,
+                positional access to a parked sender's message. A relay must move a message across a
+                wire in fragments without ever holding it whole. The slots were reserved when the
+                syscall groups were laid out, so no numbering moved.</li>
+            <li><strong>Sleepers park on their own hart's deadline queue.</strong> Each hart's
+                comparator is armed for the earlier of its next tick and its earliest sleeper, so a
+                250&nbsp;µs sleep is no longer rounded up to a whole scheduling tick. A thread is bound
+                to its hart for life, so expiry is a look at the head of a list and the wake is local
+                rather than an IPI.</li>
+            <li><strong>A credential the kernel may hold but never authors.</strong>
+                <code>TM_PRIV_VSPACE_SET_CRED</code>, under the same contract as the sub-opcode that
+                stamps the pid: taskman owns the policy, the kernel holds a copy only so it can report
+                a <em>sender's</em> identity to a <em>receiver</em>.</li>
+            <li><strong>Every PCI root complex is found and published</strong>, not the first one. The
+                K3 has more than one.</li>
+            <li><strong>The video controller's handoff block is found by the kernel</strong>, and a hart
+                the character generator runs on is never started. That is a kernel duty rather than a
+                driver's: by the time a driver could look, the hart would already have been taken.</li>
+            <li><strong>Heterogeneous cores are recorded, not hidden.</strong> The K3's eight X100
+                application harts and eight A100 AI harts are distinguished from the tree's own
+                <code>cpu-ai</code> property, published as <code>TAG_CPUS</code> in the system map, and
+                an auxiliary hart is <em>refused nothing</em> — placement is a policy decision, so
+                drivers ask <code>qsoe_sysmap_ist_runmask()</code> instead of naming a hart.</li>
+            <li><strong>Withheld harts are honored and announced.</strong> A <code>cpu@</code> node
+                whose <code>status</code> is not <code>okay</code> belongs to firmware and is neither
+                started nor counted.</li>
+            <li><code>ConnectAttach</code> to a non-local node answers <strong><code>ENETDOWN</code></strong>
+                on both kernels. It used to be <code>EINVAL</code> on one and <code>EHOSTUNREACH</code>
+                on the other, and neither was right: the host is not unreachable, there is no
+                distributed-networking manager on this machine to reach it through.</li>
+            <li><code>SYS_CONNECT_CLIENT_INFO</code> is <strong>deleted, not implemented</strong>. It
+                had a number, a libc prototype and an assembly stub, and no entry in the kernel's
+                dispatch table — so the first program to ask would have reached
+                <code>syscall_unimpl_panic()</code> and taken the machine down. That emptiness was
+                correct: a credential is not a kernel fact, so a kernel asked for one could only invent
+                it. <code>ConnectClientInfo</code> is an ordinary library call over
+                <code>TM_REQ_GET_CRED</code> now.</li>
+            <li>The kernel spinlock moved into a header of its own; five files stopped including the
+                whole channel and message graph to reach a lock.</li>
+          </ul>
+
+          <h3>Skimmer — corrected</h3>
+          <ul class="tidy">
+            <li><strong>An interrupt attachment is torn down when its thread ends.</strong> Nothing
+                removed an <code>intr_table</code> entry when its thread went away, so a driver thread
+                that crashed left the kernel pointing at a thread that no longer existed, and the next
+                fire panicked. That inverts the entire reason drivers live in userspace: <em>any process
+                allowed to attach a source could halt the machine by attaching one and exiting.</em>
+                Teardown now happens immediately before <code>TDF_ZOMBIE</code> is published, on the
+                ending thread's own hart — which is not incidental, since an IMSIC enable bit lives in a
+                CSR only that hart can reach.</li>
+            <li><strong>A zombie thread could be scheduled and run.</strong> A thread destroyed by
+                another had its VSpace dropped under the comment "it never runs again", but nothing took
+                a merely RUNNABLE victim off the runqueue. Scheduled, it ran on the kernel boot page
+                table and returned to U-mode at an address not mapped there. Reproduced on the Unmatched
+                with a spawn loop and rapid Ctrl-C.</li>
+            <li><strong>An rcvid stays positive for every generation a slot can reach.</strong> The
+                per-slot generation was sixteen bits, so it reached bit 31 and an ordinary message
+                arrived looking like an error — the resmgr skipped it, the kernel had already completed
+                the rendezvous, and the sender stayed reply-blocked for good while the server went on
+                serving everyone else, healthily and visibly. Not one message either: 32768 vanish
+                before it wraps. Fifteen bits still gives ample ABA protection.</li>
+            <li><strong><code>MsgReceive</code> reports the sender's own lengths</strong>, not how much
+                was delivered into the receiver's buffer. A relay that must move a message larger than
+                it will ever hold needs to know how big the message is; the field that was supposed to
+                say had been reporting the truncation instead.</li>
+            <li><strong>A pulse is not a bad rcvid.</strong> The kernel sets rcvid to 0 for a pulse
+                precisely because there is no sender parked behind it, and folding that in with
+                <code>rcvid&nbsp;&lt;&nbsp;0</code> printed <code>bad rcvid=0</code> on every pulse that
+                reached taskman — where the one thing that must not happen next is a reply.</li>
+            <li><strong>A resource manager keys per-open state on the scoid</strong>, not on the client's
+                coid. A coid is unique only inside the process that holds it, so two processes' fd 3 are
+                the same number at the server and landed on one open control block. The kernel had been
+                stamping the scoid into every message all along.</li>
+            <li>A U-mode fault with no usable crash stub now prints the thread, its VSpace and the
+                installed <code>satp</code> before the panic. <code>satp</code> against
+                <code>v_root_pa</code> is what separates "the space was torn down under a running
+                thread" from "the thread is on a page table that is not its own" — and it is what found
+                the zombie above.</li>
+          </ul>
+
+          <h3>QSOE/L — the seL4 seam</h3>
+          <ul class="tidy">
+            <li><strong>The vectored <code>Msg*</code> family is real.</strong> Built on two new taskman
+                transfer directions — <code>TM_MSG_XFER_READ</code> and <code>TM_MSG_XFER_WRITE</code> —
+                that reach a pending message positionally and leave the stash standing. They had been
+                announcing stubs, and <code>qsp</code> relays through <code>MsgReadv</code>, so
+                transparent distributed networking did not run on QSOE/L at all. It does now, both
+                directions.</li>
+            <li><strong>Every process gets a 64&nbsp;KiB stack and a guard page.</strong> It was two
+                pages, and <code>qsh</code> ran 128 bytes past the bottom while sourcing an init
+                fragment — on this kernel a silent write into whatever happened to be below. The size is
+                QSOE/N's, and it has to be: the same userspace runs on both kernels, so a program that
+                works on one and dies on the other over its stack is exactly the divergence a shared
+                userspace exists to prevent.</li>
+            <li><strong><code>msglen</code> was one word short</strong> — it counted the body and not the
+                type word, so a server sizing a path from it read one byte too few, and every
+                <code>open()</code> through the QSP relay came back <code>ENAMETOOLONG</code>.</li>
+            <li><strong><code>dstmsglen</code> reported the receiver's buffer</strong>, which is a number
+                the receiver already knows. It rides bits 32..51 of the seL4 label now, plus one, so a
+                stored zero keeps its own meaning: nothing was stated.</li>
+            <li><strong><code>MsgReceive</code> reported the sender's byte count as <code>msglen</code></strong>,
+                which is defined as what landed in the caller's buffer, clamped — so anything trusting
+                the field read past its own buffer. <code>srcmsglen</code> carries the unclamped figure
+                and always did.</li>
+            <li><strong>The bulk-transfer stash was keyed on the client pid alone</strong>, and it names
+                a buffer inside that client. Any process could name a client with a bulk receive in
+                flight and push its own bytes into that client's reply buffer. The identity of the
+                exchange is the (client, server) pair, not either half of it.</li>
+            <li><strong><code>read()</code> and <code>write()</code> chunked at 928 bytes</strong> — the
+                raw message capacity — rather than <code>TM_IO_MAX</code>, which is what every resource
+                manager sizes its buffers to. Thirty-two bytes more than the server had allocated.</li>
+            <li><strong>A connection id is reported as a connection id.</strong>
+                <code>MsgReceive</code> had been handing taskman's badge back as <code>info->pid</code>,
+                with a comment still claiming the two were the same thing — silently mis-attributing
+                every client a server looked at.</li>
+            <li><strong>Every nonzero exit was reported as a signal.</strong> taskman stored a
+                terminating process's exit code raw, and <code>WTERMSIG(s)</code> is
+                <code>s&nbsp;&amp;&nbsp;0x7f</code> — so a child that exited 7 read as <em>killed by
+                signal 7</em>, and <code>WEXITSTATUS</code> answered zero, while QSOE/N encoded the byte
+                into bits 15..8. The same program reported different things on the two kernels.</li>
+            <li><strong>The bulk bounce copy reaches any client VA</strong> — image frames and
+                worker-thread stacks, not only mmap'd megapages.</li>
+            <li><strong><code>ThreadJoin_r</code></strong>. The seam carried a reentrant
+                <code>ThreadDetach_r</code>; join never got one, so the shared <code>pthread_join</code>
+                would have found nothing to call — and a missing function here does not fail at load
+                time, it resolves to zero and faults at pc 0.</li>
+            <li><strong>A quiet boot.</strong> taskman mirrors seL4's untyped free-index arithmetic
+                instead of probing it. There is no invocation that asks how much of an untyped is left,
+                so the only way to find out was to retype and read the failure — and every probe printed
+                <em>"Untyped Retype: Insufficient memory"</em> from the kernel, which had scrolled past
+                every boot since May and looked exactly like the fault it is not. Boot, login and the
+                full suite are silent now.</li>
+            <li><strong>Device untypeds carve order-free where they can.</strong> A device UT's free
+                index only advances, so mapping a high offset strands every lower one — and a driver must
+                map a handoff block before it can learn where the array below it lives.</li>
+            <li>A <code>_Static_assert</code> that <code>seL4_MsgMaxLength</code> still equals
+                <code>QSOE_MSG_MAX_LENGTH</code>. They are the same number by adoption rather than by
+                construction.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="memory">
+            <summary>Memory</summary>
+            <div class="fold-body">
+          <p class="lead">Two processes can now share memory by name instead of by physical address —
+             and memory a device writes can be asked for as uncached.</p>
+
+          <ul class="tidy">
+            <li><strong>Publishable regions.</strong> <code>TM_REQ_REGION_PUBLISH</code> /
+                <code>MAP_REGION</code> / <code>REGION_REVOKE</code>. The owner names a range by its
+                <em>virtual</em> address and gets an id back; whoever may map it names the id and never
+                an address. Until now the only way to hand memory across a process boundary was
+                <code>MAP_PHYS</code> — authority by assertion, and on QSOE/L not available for RAM at
+                all, for exactly the reason seL4 is chosen.
+                <p>Ownership is checked against the page table itself: every page of the range must be
+                   mapped in the caller's VSpace, and the whole run must be one contiguous physical
+                   range. An earlier attempt kept a ledger of everything taskman had handed out — a
+                   second copy of a truth the page table already holds, which had to be bounded and
+                   duly ran out: a USB host that allocates a page at a time filled all thirty-two
+                   entries before the login prompt. The mapping <em>is</em> the ownership.</p>
+                <p>Skimmer satisfies the request by mapping the owner's frames by physical address;
+                   seL4 copies the owner's frame capabilities into the client's CSpace and maps them.
+                   The caller cannot tell.</p></li>
+            <li><strong>Uncached memory, and contiguous runs of it.</strong>
+                <code>TM_REQ_ALLOC_PHYS</code> takes a flags word and no longer stops at one page. A
+                longer request is served as one physically contiguous run — a device walks the range
+                itself, and pages that merely happen to be adjacent in the caller's address space are no
+                use to it. The ceiling is 2&nbsp;MiB, which is not arbitrary: QSOE/L serves this from one
+                seL4 Mega_Page, so a driver staying under it runs unchanged on both kernels.</li>
+            <li><strong><code>QSOE_ALLOC_UNCACHED</code></strong> maps the pages with Svpbmt's NC memory
+                type — for memory a device writes behind the CPU's back in units smaller than a cache
+                block, where no amount of cache maintenance is correct: a clean writes back a whole
+                block, a block holds several descriptors, and it always carries a stale copy of somebody
+                else's. On a hart without Svpbmt the request is <strong>refused</strong>, not quietly
+                downgraded — handing back cached memory produces a driver that works until it does not,
+                which is the failure the flag exists to end.</li>
+            <li><strong><code>TM_REQ_MAP_FDT</code> is retired.</strong> The device tree is well-known
+                region <code>QSOE_REGION_FDT</code> now, published once at startup. The opcode and the
+                region call differed only in naming a thing rather than an id; keeping both would have
+                meant two mechanisms for one job, with the second being the one nobody maintained.</li>
+            <li><code>MAP_PHYS</code> reaches device memory only on QSOE/L, deliberately: a process able
+                to map RAM by address is a process able to map every other process.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="process">
+            <summary>Processes, sessions and signals</summary>
+            <div class="fold-body">
+          <p class="lead">What "my terminal" means on a machine with two consoles, and what happens
+             when something is killed.</p>
+
+          <h3>Sessions and the controlling terminal</h3>
+          <ul class="tidy">
+            <li><strong>taskman gains a refcounted session</strong> — leader, process group, and the path
+                of the controlling terminal. <code>setsid()</code> starts a session with no terminal;
+                <code>tcsetctty()</code> names one, in that order because POSIX says so. The sharing is
+                the whole point: a terminal claimed once in getty is seen by login, by the shell login
+                spawns, and by everything the shell runs after that.</li>
+            <li><strong><code>/dev/tty</code> is answered from the asking process's session</strong>, not
+                from a global alias. It cannot be a symlink and be correct — the name means "the terminal
+                of whoever is asking", so one alias necessarily names the wrong device for half of a
+                machine with two consoles. Before this, a login on the screen printed its password
+                prompt down the serial line.</li>
+            <li><strong>The terminal is stored as a path, not a descriptor.</strong> A QSOE fd is a raw
+                coid straight onto the resource manager, so neither libc nor taskman can map one back to
+                the name it was opened under — and the name is precisely what the pathmgr resolves.
+                <code>tcsetctty()</code> is therefore named for what it does rather than borrowing a
+                signature it cannot honor.</li>
+            <li><strong><code>/proc</code> reports the session, the process group and the terminal</strong>,
+                and <code>ps</code> shows a TTY column with no flag asked for. On a machine with one
+                console that column is nearly free; on a machine with two it is the first question
+                anyone asks.</li>
+            <li><strong>A pulse can be sent to a channel taskman holds no connection to</strong>, for
+                group signal delivery: taskman learns a process's signal chid when that process registers
+                one, but has never opened a connection to it, and should not have to mint one just to
+                deliver an interrupt to a foreground process group.</li>
+          </ul>
+
+          <h3>Spawn</h3>
+          <ul class="tidy">
+            <li><strong><code>posix_spawn</code> delivers its third argument.</strong> It never had.
+                libc packed the environment onto the wire, the spawn handler unpacked it into a pointer
+                array, and then dropped it, while the stack builder was fed a hardcoded empty
+                <code>envp</code>. So <em>every process on this system started with an empty
+                environment</em> — <code>posix_spawn</code> returned success, the child ran, and the
+                variables were simply not there.</li>
+            <li><strong><code>posix_spawn</code> honors its file actions.</strong> With no
+                <code>fork()</code> there is no child to run <code>addopen</code> / <code>adddup2</code> /
+                <code>addclose</code> in, so they are replayed into a <em>description</em> of the
+                descriptor table the child will start with, and the spawn request carries that table
+                over. An action with no meaning yet — <code>chdir</code>, <code>fchdir</code> — returns
+                ENOSYS rather than being quietly skipped, and so does an unsupported <code>attrp</code>
+                flag.</li>
+            <li><strong>An inherited descriptor is the parent's open, not a new one.</strong> A resource
+                manager keys per-open state on the id it issued, so a child given a fresh one arrives as
+                a stranger holding a descriptor the server never opened — POSIX's shared file
+                description turned into two unrelated ones.</li>
+            <li>On QSOE/L, <strong>child fd N is CSpace slot <code>QSOE_CAP_FD_BASE&nbsp;+&nbsp;N</code></strong>,
+                a reserved block of sixteen. A fixed convention rather than taskman-chosen slots,
+                because then the child needs no table handed to it — only which fds it got, which it asks
+                for once before <code>main()</code>. A CSpace cannot be read from inside.</li>
+            <li>A descriptor whose binding outlived its connection is <strong>not</strong> offered to a
+                child.</li>
+          </ul>
+
+          <h3>Ending a process</h3>
+          <ul class="tidy">
+            <li><strong>A killed process actually stops running.</strong> A default-terminate signal was
+                delivered on the process's signal thread, which called <code>_Exit</code>, which
+                terminated only itself. The process was reaped on paper — <code>waitpid</code> returned,
+                the parent got SIGCHLD — while every other thread kept running, still holding whatever it
+                had claimed. A shell killed while parked reading a console left that console owned
+                forever: the next getty opened the device, arrived as a different client, was refused
+                EBUSY, exited, and was respawned — a loop that took the screen away permanently on behalf
+                of a process that no longer existed.
+                <p>Three things were missing and all three are here. Cross-thread destroy accepts any
+                   BLOCKED target wherever it is parked, rather than only one parked in receive — which
+                   is why the thread that mattered, one parked in a read, could not be killed at all. The
+                   kernel frees the server's pending-sender slot for a dying client and says so with an
+                   unblock pulse carrying the rcvid. And <code>ThreadDestroy(-1)</code> means every other
+                   thread of the process, as it does on QNX.</p></li>
+            <li><strong>An interrupt character reaches the command, not the shell.</strong> The terminal
+                driver holds the foreground process group and signals it, which is where QNX puts it too
+                — the driver is what sees the keystroke arrive, so nothing else is in a position to turn
+                it into a signal.</li>
+            <li>Reserved system pulse codes are defined, and the synthetic side-channel coid window is
+                gone — nothing ever allocated one, and the scoid does that job properly.</li>
+          </ul>
+
+          <h3>Credentials</h3>
+          <ul class="tidy">
+            <li><strong><code>struct _msg_info</code> carries the sender's credentials on QSOE/N</strong>,
+                read at send time and delivered with every message. Both halves of that are load-bearing.
+                A server <em>cannot ask</em> who its client is: taskman's dispatch is a single thread, so
+                while it is parked sending a request to a server it cannot answer that server — and
+                taskman opens files on a filesystem in order to spawn. Asking hung the first spawn after
+                the root filesystem mounted.</li>
+            <li>A server wanting POSIX's rights-fixed-at-open copies them into its per-open state, which
+                is where that freeze belongs; a frozen one cannot be un-frozen.</li>
+            <li><strong>taskman answers <code>TM_REQ_GET_CRED</code></strong> on both kernels, and
+                <code>ConnectClientInfo</code> is an ordinary library call over it.</li>
+            <li><strong>A file belongs to whoever made it.</strong> <code>fs-tmpfs</code> nodes have
+                carried <code>uid</code>/<code>gid</code> fields all along with nothing writing them.</li>
+            <li><strong>On QSOE/L the credential rides in the connection badge.</strong> seL4 hands a
+                receiver a badge and nothing else, and taskman cannot be asked mid-flight who a client
+                is, so the identity is stamped at <code>ConnectAttach</code> — the one moment it can be
+                — and the capability is minted send-only, so the holder cannot re-badge it. An id too
+                wide for the field is refused rather than truncated: the smallest id is 0, and silently
+                granting the superuser is not a rounding error. The trade is that the badge is fixed for
+                the life of the connection, where QSOE/N's is read fresh on every send.</li>
+            <li><strong>The credentials are acted on, not merely delivered.</strong> <code>fs-qrv</code>
+                checks the permission triads against the caller on both kernels, so an ordinary user
+                reading <code>/etc/shadow</code> gets EPERM — mode bits that mean something, rather than
+                decoration on a filesystem where everybody was root.</li>
+            <li><strong><code>su</code> needs no setuid bit, and QSOE has none.</strong>
+                <code>TM_REQ_BECOME_USER</code> carries a name and a password to taskman, which owns both
+                the credential table and the password cache: it verifies and changes the caller's identity
+                itself. The privileged step lives in the server that already holds the authority, so no
+                privileged intermediary program has to exist — and the stored hash never leaves
+                taskman.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="fs">
+            <summary>Filesystems and resource managers</summary>
+            <div class="fold-body">
+          <p class="lead">The first writable filespace, and the verbs a server needs to be told about
+             it.</p>
+
+          <h3><code>fs-tmpfs</code> — RFS</h3>
+          <ul class="tidy">
+            <li>QSOE has had no writable filespace. This is it. RFS is reconstructed in C from a
+                late-1990s x86 assembly filesystem whose block allocation maps and B-tree directories
+                were in turn adapted from David Lindauer's OS-32 kernel. The design is carried over
+                intact; the code is fresh.</li>
+            <li>What made it port cleanly is that RFS names storage by block number and never by
+                pointer, which allows the one structural change: instead of a contiguous RAM disk
+                reserved up front, the store is a directory of 2&nbsp;MiB chunks mmap'd as blocks are
+                first allocated. An idle mount costs a handful of pages; the size is a cap against
+                runaway growth, not a reservation.</li>
+            <li>The geometry is the original's proportions at modern sizes — 4&nbsp;KiB blocks, a
+                256-byte node header and 128-byte entries land on 30 entries per node, exactly the
+                original pair — so every split, concatenate and roll invariant carries over unchanged,
+                while names grow from 20 to 108 characters and the largest file from 16&nbsp;MiB to
+                259&nbsp;MiB.</li>
+            <li>Three parts of the original were unfinished and are written here rather than translated:
+                path resolution, reading a directory, and the B-tree's root collapse on removal. Two
+                further departures are deliberate: a directory's head block number never changes, and
+                "." and ".." are synthesized rather than stored.</li>
+          </ul>
+
+          <h3>The resource-manager framework</h3>
+          <ul class="tidy">
+            <li><strong><code>_IO_SETATTR</code></strong> — chmod, chown and truncate are the same
+                operation on a different field, so they are one verb. It reaches the framework's
+                <code>adjust()</code> method, which had been defined, implemented by
+                <code>fs-tmpfs</code>, and unreachable for want of a message. Numbered inside the
+                <code>_IO_</code> range so one frame serves twice: on a connection the badge names the
+                object; with a path taskman resolves and forwards.</li>
+            <li><strong>Removal reaches a Provider.</strong> <code>tm_unlink</code> used to answer ENOSYS
+                for any path an external resource manager owned, so no filesystem could remove anything
+                however writable. It forwards the caller's frame to the owning server now, the same shape
+                spawn-from-filesystem already uses, and returns the server's own errno.
+                <code>mkdir()</code>, <code>rmdir()</code> and <code>unlink()</code> reach a server on
+                both kernels.</li>
+            <li><strong><code>_IO_CONTROL</code> dispatches to a Provider's <code>control()</code>
+                method</strong>, and <code>devcontrol()</code> is the client end — what QSOE has instead
+                of <code>ioctl()</code>. Three unsigned values rather than one signed integer with all
+                three packed into it: the subsystem addressed, the direction the bytes travel, and that
+                subsystem's own command ordinal. The direction is checked against the byte counts before
+                the server is entered, so a caller claiming to read while offering no capacity is refused
+                at the boundary; and because the subsystem is a field rather than a prefix baked into the
+                number, two providers of different kinds may both call their first command 1. That
+                surface is much of what made the shared network ring possible.</li>
+            <li><strong>One catalog names the parts of the system, and both users of a name share it.</strong>
+                <code>&lt;qsoe/ctlcodes.h&gt;</code> numbers the subsystems — kernel, taskman, character
+                devices, terminals, video, input, PCI, block, USB, filesystems, network, QSP, log, power,
+                RTC, random — in a deliberately sparse 16-bit space, so a new driver family lands beside
+                its relatives rather than at the end. Those numbers <em>are</em> the slog major codes:
+                <code>&lt;sys/slogcodes.h&gt;</code> defines its <code>_SLOGC_*</code> names in terms of
+                them. A log record and a control command about the same subsystem cannot disagree about
+                what that subsystem is called.</li>
+            <li><strong>Pipes are an ordinary resource manager</strong> that clients open twice, with
+                capture objects so a shell can read a command's output for <code>$(...)</code>.
+                taskman's <code>TM_REQ_PIPE_CREATE</code> is deleted on both kernels.</li>
+            <li>An end lives until its <em>last</em> holder closes: taskman gives an inherited fd the
+                parent's connection id on purpose, so parent and child share one binding and the server
+                sees one scoid.</li>
+            <li>libressrv locks its deferred-call pool.</li>
+            <li><strong><code>/dev/urandom</code></strong>, served by taskman over a SplitMix64 generator
+                in libtaskman, seeded from <code>CLOCK_MONOTONIC</code>. Nothing in QSOE could get an
+                unpredictable byte before. <code>/dev/random</code> is deliberately absent — it would have
+                to be a lie or a stub that blocks forever, and the honest thing is for the name not to
+                resolve until there is something real behind it.</li>
+            <li><strong><code>/sys</code> grows.</strong> The hostname, the mount table, and the fields
+                <code>uname</code> reads — so the release string comes from <code>git describe</code> and
+                no literal needs bumping anywhere.</li>
+            <li><code>ls</code> can tell a failed <code>readdir</code> from the end of a directory.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="drivers">
+            <summary>Drivers and hardware</summary>
+            <div class="fold-body">
+          <p class="lead">A screen, a keyboard, three network controllers, and a second board to run
+             them on.</p>
+
+          <h3>The SpacemiT K3 Pico-ITX</h3>
+          <ul class="tidy">
+            <li><strong>A board concept.</strong> Kconfig gains a <em>Target boards</em> menu
+                (<code>PLAT_QEMU_VIRT</code>, <code>PLAT_SIFIVE</code>, <code>PLAT_K3</code>), several
+                selectable at once. The board turns out to be a <strong>link-time property alone</strong>:
+                once the kernel derives its own physical load address at run time, no compiled object
+                carries one, so every board shares one set of objects and differs only in the link
+                step.</li>
+            <li><strong>The IMSIC interrupt-file stride is derived, not assumed.</strong> A file is one
+                page, but consecutive harts' files are not one page apart: each hart owns
+                2^<code>guest-index-bits</code> pages, and the K3 declares 6, making its real stride
+                256&nbsp;KiB. Every hart above hart 0 would have had its MSIs written into the wrong page
+                — nothing faulting, the interrupts simply never arriving.</li>
+            <li><strong>The S-mode APLIC is identified by its <code>msi-parent</code></strong>, the IMSIC
+                it sends to, instead of by the console UART's <code>interrupt-parent</code>. The old
+                coupling made the interrupt controller depend on recognizing a serial port: an unknown
+                console left no APLIC, the PLIC backend was selected, and <code>plic_init</code> panicked
+                — on a SoC that has no PLIC, with nothing in the message pointing at the UART that caused
+                it.</li>
+            <li><strong>The identity map no longer starts at a compile-time constant.</strong> With DRAM
+                at 4&nbsp;GiB the stale value paved over <code>TASKMAN_VA_BASE</code> with megapage
+                leaves and panicked at the first user blob.</li>
+            <li><strong>Physical-memory tables sized for a SoC with companion firmware.</strong> Eight
+                exclusions came from QEMU virt and the FU740, which use five between them; the K3 needs 29
+                before the first page table exists. Now 64, and an overflow names the region that did not
+                fit.</li>
+            <li><code>head.S</code> bounds-checks the hartid the firmware enters on, in both the primary
+                and secondary paths, and announces over SBI DBCN before halting. A failed
+                <code>sbi_hart_start</code> is remembered, so a refused start no longer surfaces 500&nbsp;ms
+                later as a timeout on a hart that was never started.</li>
+            <li>The initrd need not lie inside the RAM the kernel manages; <code>mem_info</code> describes
+                the bank the kernel manages rather than whichever <code>memory@</code> node was parsed
+                last, and says out loud when higher banks go unused.
+                <code>CONFIG_MAX_CPU_COUNT</code> defaults to 16.</li>
+            <li>The K3's console: <code>spacemit,k1-uart</code> / <code>intel,xscale-uart</code> /
+                <code>snps,dw-apb-uart</code> are recognized beside <code>ns16550a</code>, and the FDT
+                walker names the part's <em>flavor</em> rather than answering yes or no.
+                <code>reg-shift</code> and <code>reg-io-width</code> are parsed and published — a byte
+                access at the right address on this part reads a byte lane, not the register — and the
+                xscale flavor sets <code>IER.UUE</code>, without which the block is simply off while every
+                register still reads back plausibly.</li>
+            <li>The K3's RTC (<code>mrvl,mmp-rtc</code>: one MMIO register holding Unix seconds, with no
+                bus protocol in front of it) is published through the sysmap beside goldfish and the
+                DA9063.</li>
+          </ul>
+
+          <h3>Console and input</h3>
+          <ul class="tidy">
+            <li><strong><code>devc-hficon</code> — a console, not a display.</strong> Repaint goes
+                through the controller's GPFIFO. A read <em>defers</em> instead of returning EOF, and the
+                input seam is push, not pull: the keyboard driver, whenever it comes up, opens the
+                console's published path and injects characters — not scancodes, because translating what
+                the hardware speaks belongs in the driver that understands that hardware.</li>
+            <li><strong>Who owns the blink.</strong> The K3's character generator runs on a hart of its
+                own and toggles the blink phase itself; writing that field from the driver made it the
+                second writer on a word it does not own. The handoff block's
+                <code>owned_hart_mask</code> says which controllers are like that.</li>
+            <li><strong>The terminal knows its size.</strong> <code>devc-hficon</code> answers
+                <code>TIOCGWINSZ</code> from the character grid the firmware handed over — it is the only
+                party that knows, since the grid is mode-dependent and 80x24 is a guess that is sometimes
+                simply wrong. <code>TIOCSWINSZ</code> is deliberately absent: a caller announcing a
+                different size would be describing something that is not on the glass.</li>
+            <li><strong><code>devu-xhci</code></strong> (renamed from <code>devu-dwc3</code>, for what it
+                implements rather than the one core it was written on) class-matches an xHCI on the PCI
+                bus and falls back to the device tree. A controller found on PCI has BAR0 mapped, memory
+                decode and bus mastering enabled, and its PCI handle kept. Board-specific glue is gated on
+                the board. Hot-plug rescanning every three seconds by default, with <code>-p</code> to
+                change the period or turn it off.</li>
+            <li><strong><code>sysact</code></strong> — the keyboard reports a chord and sysact decides
+                from <code>sys_actions.conf</code> what it means, so a new binding is a line in a table
+                and never a change to a driver. <code>devu-xhci</code> sends any Alt-held keystroke as a
+                pulse rather than injecting text, which also fixes Alt being ignored outright:
+                Ctrl-Alt-Del used to inject whatever Ctrl-Delete produced.</li>
+            <li><code>devc-ser8250</code> takes its register shape and part quirks from the sysmap,
+                inherits the firmware's baud rate instead of re-bauding, and does not reset the transmit
+                FIFO when adopting the console. It had set the divisor to 1 — ignored by QEMU, about
+                928&nbsp;kbaud at the K3's 14.857&nbsp;MHz UART clock — so the board's first successful
+                boot ran the entire kernel, taskman and this driver's own spawn correctly, then turned to
+                line noise the instant the driver touched its own port.</li>
+            <li><code>devc-sersifive</code> gained job control, so Ctrl-C reaches the foreground
+                group.</li>
+          </ul>
+
+          <h3>PCI and storage</h3>
+          <ul class="tidy">
+            <li><code>pci-server</code> drives several root complexes, gets BAR addresses right, and
+                closes the bridge windows it never allocates from — which is what the K3's MSI-X turned
+                out to depend on.</li>
+            <li><strong>The firmware's layout is kept where firmware made one.</strong> Reassigning BARs
+                underneath a display controller the firmware had handed over broke the handoff; the
+                policy is now per-board and asks the narrower question it always meant — is the
+                handed-over display controller behind PCI.</li>
+            <li><code>devb-nvme</code> aims its MSI-X table entry at the hart the kernel reports for its
+                interrupt attach, rather than at a plausible zero.</li>
+            <li>Drivers ask the sysmap where to put an interrupt-service thread instead of naming
+                hart&nbsp;1.</li>
+            <li>The IRQ listings stopped printing numbers that contradict each other; the interrupt
+                identity is named honestly and its hart reported.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="net">
+            <summary>Networking — QSP</summary>
+            <div class="fold-body">
+          <p class="lead">The system had no networking of any kind at 0.1 — no sockets, no stack, no
+             driver, not a line of it.</p>
+
+          <ul class="tidy">
+            <li><strong>The wire.</strong> <code>libvirtio</code> (the MMIO register block, the status
+                handshake, 64-bit feature negotiation and the split virtqueue, in both transport
+                versions), <code>devn-virtio</code> for QEMU, <code>devn-gem</code> for the Unmatched's
+                Cadence GEM, and <code>devn-dwmac</code> for the DesignWare EQoS on the K3 and the
+                VisionFive&nbsp;2.</li>
+            <li><strong>The shared descriptor ring.</strong> A network driver used to be a resource
+                manager like any other — <code>read()</code> a frame out, <code>write()</code> one back —
+                which put every frame through a message round trip with an 896-byte payload cap, so a
+                1514-byte Ethernet frame arrived in pieces that had to be reassembled by the very layer
+                trying to measure the wire. At line rate that is some eighty thousand round trips a
+                second. <code>libnetdev</code> replaces it: one physically contiguous uncached region,
+                published; free-running producer and consumer counters; doorbells as pulses; a frame
+                written once and read in place.</li>
+            <li><strong>QSP circuits and transactions.</strong> <code>open("/net/node2/dev/ser1")</code>
+                opens node 2's serial port, and reading and writing the descriptor reach it. Each station
+                that comes up is registered at <code>/net/&lt;callsign&gt;</code>; longest-prefix
+                resolution sends the directory to the framework and everything beneath a station to the
+                relay, decided once at <code>open()</code> and never again per message.</li>
+            <li><strong>The relay does not decode.</strong> The framework exists to turn a request into a
+                typed method call, which is the one thing a transparent relay must never do. Exactly two
+                message types are looked at, and everything else is forwarded as bytes without being
+                understood — so an application's own private protocol crosses unchanged.</li>
+            <li><strong>The division of labor between threads is forced rather than chosen.</strong>
+                <code>MsgReadv</code> and <code>MsgWritev</code> act on the message the calling thread
+                received, so the wire thread — which owns the interface and must never block — cannot
+                touch a client's message at all. Work arriving for us is queued to a separate pool,
+                because both ends of a two-station net run both roles and a station must not wait on
+                itself.</li>
+            <li><strong>Output split by audience.</strong> Which station this is, who else is out there,
+                and when either changes stay on the console: on a net that is the operational picture and
+                not diagnostics. Circuits, relayed messages, fragment boundaries and failed transactions
+                go to slog. <code>net_dbg</code> and <code>net_trace</code> sit below the default floor,
+                so they cost a load and a compare until asked for — which matters on this path
+                specifically, since the relay is in the middle of every remote message.</li>
+            <li><strong>A development station on the roster.</strong> <code>qspstation</code> speaks QSP
+                from Linux user space, so a board can reach the build tree directly as
+                <code>/net/&lt;station&gt;</code> instead of waiting for a program to be staged into an
+                image. <code>workday</code> and <code>qfetch</code> fetch the day's working set over that
+                link, into tmpfs mounts placed where they are wanted.</li>
+            <li>Diagnostics: <code>qspinfo</code>, <code>netloop</code>, <code>netmirror</code>,
+                <code>netpoke</code>, and a host-side frame sniffer for the emulated segment.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="libc">
+            <summary>The C library</summary>
+            <div class="fold-body">
+          <p class="lead">One <code>libc.so</code>, around 85% shared at the source level between the
+             two kernels.</p>
+
+          <ul class="tidy">
+            <li><strong>The POSIX surface a serious program expects to find</strong> — the sweep that
+                made the file manager, the editor and the network tools compile without local
+                workarounds.</li>
+            <li><strong><code>R_RISCV_COPY</code> relocations are applied — and bound.</strong> A non-PIE
+                executable that imports a data object from a shared library reaches it through a private
+                copy in its own <code>.bss</code>, filled by the loader. Applying it is only half of what
+                ELF asks: the copy must then <em>become</em> the definition for every other reference to
+                that name, including the defining library's own, or the two drift apart the moment either
+                side writes. Both halves now happen, on both kernels.</li>
+            <li><code>crt0</code> calls <code>exit()</code> rather than <code>_exit()</code>, so
+                <code>atexit</code> handlers and stdio flushing happen where a program expects them.</li>
+            <li><strong>The run-time loader is gone, because nothing was running it.</strong> taskman
+                loads the program, <code>libc.so</code> and every library named by
+                <code>DT_NEEDED</code>, resolves them against one another and jumps to the entry point;
+                probing showed the separate loader's relocation walker had never fired, in any process,
+                on either kernel. <code>PT_INTERP</code> is gone from every binary — an interpreter path
+                names who <em>would</em> load a program on a system that delegates, and this one does
+                not — and <code>lib/ld-qsoe.so.1</code> no longer ships.</li>
+            <li>The vectored <code>Msg*</code> family carries <strong>QNX 8's signatures type for
+                type</strong> (<code>rcvid_t</code>, <code>size_t</code>, <code>ssize_t</code>,
+                <code>const iov_t *</code> in both directions), and the plain forms call their own
+                <code>_r</code> variants rather than re-issuing the syscall.</li>
+            <li><code>pipe()</code>, <code>pipe2()</code> and capture objects; <code>posix_spawn</code>
+                file actions; <code>mkdir()</code>, <code>rmdir()</code>, <code>unlink()</code>,
+                <code>chmod()</code>, <code>chown()</code>, <code>truncate()</code>;
+                <code>uname()</code> answering from <code>/sys</code>; <code>gethostname()</code> /
+                <code>sethostname()</code>; the region and physical-allocation calls;
+                <code>devcontrol()</code>; <code>setsid()</code>, <code>tcsetctty()</code> and the
+                foreground group; <code>TIOCGWINSZ</code>.</li>
+            <li><strong><code>ioctl()</code> is retired.</strong> Its defects are structural rather than
+                incidental: one signed integer carrying the subsystem, the direction and the command,
+                packed by macros that different systems pack differently — so a request code is not
+                portable, the direction is a claim nobody verifies, and a code above
+                <code>INT_MAX</code> arrives negative. <code>devcontrol()</code> carries the same three
+                things as three unsigned values.</li>
+            <li><strong>slog gained a verbosity threshold tested before the record is built</strong>, so
+                a suppressed line costs a load and a compare rather than a format. Timestamps are
+                monotonic, the ring can be drained by several readers, and <code>sloginfo -c</code> empties
+                it. A major code for USB was added.</li>
+            <li><code>pthread</code>'s static mutex and condvar initializers were wrong and are fixed.
+                <code>ENETDOWN</code> and <code>ENOTEMPTY</code> exist. <code>gethostid</code> is
+                deleted. <code>execve</code>'s announcing stub now lives once in the shared libc, since
+                there is nothing OS-dependent about not having exec.</li>
+            <li>U.S. spelling throughout the comments, and the current copyright address on the files
+                that predate it.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="shell">
+            <summary>Shell and utilities</summary>
+            <div class="fold-body">
+          <p class="lead">The part a person actually touches.</p>
+
+          <h3><code>qsh</code></h3>
+          <ul class="tidy">
+            <li><strong>Pipelines without <code>fork()</code>.</strong> <code>a | b</code> works: every
+                element is a <code>posix_spawn</code> and all but the last must be left running while the
+                next starts — a pipe holds one page, so a producer run to completion first would
+                wedge.</li>
+            <li><strong><code>$(...)</code> runs into a capture object</strong> rather than a pipe, so a
+                command substitution collects its output without a second process to drain it.</li>
+            <li><strong>Ctrl-C stops a loop.</strong> The console driver signals the foreground process
+                group and the shell gives that group to the child, so the child ended and the shell heard
+                nothing — <code>while true; do cmd; done</code> quietly began its next iteration. A
+                foreground child killed by an interrupt now interrupts the shell.</li>
+            <li><strong>TAB completes a command or a file name</strong>, with the candidate listing sized
+                from the terminal's real width.</li>
+            <li><code>COLUMNS</code> and <code>LINES</code> are materialized at startup and the geometry
+                comes from the terminal rather than a pinned 80x24 — but they are deliberately not
+                exported, because a child must ask its own terminal and a size passed through the
+                environment is a snapshot nothing can correct.</li>
+            <li>Ctrl-C and <code>^D</code> behave at an interactive prompt.</li>
+          </ul>
+
+          <h3>The file manager and the editor</h3>
+          <ul class="tidy">
+            <li><strong>An orthodox two-panel file manager</strong> is built into <code>qsh</code> as
+                <code>libcommander.a</code>; Ctrl-O enters the panels and <code>COMMANDER=1</code> brings
+                the shell up in them. Directory navigation, descend and ascend, tagging, an F-key bar,
+                a live command line that runs in the active panel's directory, a status line, and type
+                colors. The working directory follows the active panel on exit.</li>
+            <li><strong><code>qedit</code></strong> — a full-screen editor over a dynamic line array:
+                load and save with CR/LF handling, insert, split and join, scrolling, and
+                column-preserving vertical motion. Launched by F4 and usable standalone. One terminal
+                key decoder is shared between the two.</li>
+          </ul>
+
+          <h3>Utilities</h3>
+          <ul class="tidy">
+            <li>New: <code>uname</code>, <code>mount</code>, <code>df</code>, <code>mkdir</code>,
+                <code>rm</code>, <code>rtc</code>, <code>time</code>, <code>qfetch</code>,
+                <code>workday</code>, <code>sysact</code>, and the network tools.</li>
+            <li><code>mount</code> reports rather than mounts — there is no <code>mount(2)</code> here, a
+                filesystem attaches by registering a name — and settles which names are filesystems by
+                asking each one rather than from a list that would go stale. <code>df</code> asks the same
+                question; both filesystems have had the numbers all along, printed once at mount and then
+                unreachable.</li>
+            <li><code>ps</code> shows a TTY column and says why a thread is blocked and on what —
+                <code>REPLY(0x10001)</code> for a thread waiting on a server that owes it an answer,
+                <code>SLEEP(250ms)</code> for one that is merely early.</li>
+            <li><code>sloginfo</code> drains the whole ring rather than the first batch of it.</li>
+            <li><code>getty</code> claims a session and a controlling terminal on every line.</li>
+            <li><code>login</code> refuses on <code>geteuid()</code> <em>before</em> it prompts, so a
+                caller who may not become somebody else never reaches a password read at all. See
+                <a href="#bugs">Bugs worth naming</a> for why that ordering is the whole fix.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="build">
+            <summary>Boot, build and tooling</summary>
+            <div class="fold-body">
+
+          <ul class="tidy">
+            <li><strong>A self-booting QEMU disk image.</strong> <code>nvme.img</code> is a GPT UEFI
+                disk: QEMU's firmware runs <code>mr-bml</code> from its ESP, and mr-bml's menu starts
+                either variant straight off the disk — no <code>-kernel</code> juggling.
+                <code>run-nvme.sh</code> wraps the right machine, firmware and disks for each variant and
+                takes <code>NVME_IMG</code> / <code>VIRTIO_IMG</code> overrides.</li>
+            <li><strong>The image is assembled by default</strong>, and everything the tree builds is
+                staged onto it — including the drivers <code>sysinit</code> starts, which had been
+                expected on a disk nothing put them on.</li>
+            <li><strong>mr-bml 0.5.2 → 0.9</strong>: the loader this release is tested with, and the
+                one the K3 requires — a board that keeps all of its memory above 4&nbsp;GiB. Its own
+                changelog carries the rest.</li>
+            <li><strong>A changed header rebuilds what it touches.</strong> No quser component tracked
+                header dependencies, so a shared struct could grow and leave every object that was not
+                itself edited compiled against the old layout — two halves of the system disagreeing about
+                where a field is. The cause was <code>-MMD</code> where <code>-MD</code> was needed: QSOE
+                headers arrive through <code>-isystem</code>, and <code>-MMD</code> omits exactly those.
+                A program is also relinked when a library it links against changes.</li>
+            <li><strong>The boot archive is asked for every time.</strong> With file prerequisites alone,
+                make compared the archive against libc and the loader, found it newer, and skipped the
+                recipe — so a rebuilt userland never reached the image. Not hypothetical: it shipped a
+                five-hour-old userland to a board, including a <code>libc.so</code> predating symbols the
+                on-disk programs were already linked against, with the kernel and taskman in that image
+                current.</li>
+            <li><strong>A two-machine emulator mode.</strong> <code>emu.sh</code> brings up two QEMU
+                instances on one shared Ethernet segment, so a protocol that only means anything between
+                two machines can be developed without two boards. It takes <code>EMU_EXTRA</code>, and
+                refuses fewer than two harts — the character generator needs one of its own.</li>
+            <li>Host tools: <code>mkgpt.py</code> (the GPT image builder), <code>mkubootenv.py</code>,
+                <code>nvme-mrbml.cfg</code>, <code>qspsniff.py</code>, <code>qspstation.c</code>, and a CC
+                wrapper that assembles QSOE through <code>rvasm</code>.</li>
+            <li><code>component.list</code> records the tested component set for every tag; the umbrella
+                <code>README</code> and <code>ROADMAP</code> were rewritten around the new 1.0 gate, and
+                documentation moved to a centralized repository.</li>
+          </ul>
+            </div>
+          </details>
+          <details class="fold" id="bugs">
+            <summary>Bugs worth naming</summary>
+            <div class="fold-body">
+          <p class="lead">Six defects that shipped in 0.1 and are closed in 0.2. What they had in
+             common: none of them failed cleanly. Each answered plausibly and wrongly, which is the
+             expensive kind.</p>
+
+          <ul class="tidy">
+            <li><strong>Any process could halt the machine by attaching an interrupt and ending.</strong>
+                An entry in the kernel's interrupt table is a pointer to a thread, and the dispatcher
+                schedules it. Nothing removed that entry when the thread went away: a driver thread that
+                crashed, or simply returned, left the kernel pointing at a thread that no longer existed,
+                and the next fire panicked. That inverts the entire reason drivers live in userspace.
+                Teardown now happens immediately before the thread is published as a zombie, on the
+                ending thread's own hart — which is not incidental, since an IMSIC enable bit lives in a
+                CSR only that hart can reach.</li>
+            <li><strong><code>login</code> was a password oracle.</strong> From an ordinary user's shell,
+                <code>login root</code> with the <em>correct</em> password ended the session and a wrong
+                one did not — so an unprivileged user could test root's password and read the answer off
+                the difference. The eviction was not the credential switch failing, which is what it
+                looked like: it was ksh's <code>login=exec login</code> alias, inherited wholesale, which
+                turns every ordinary refusal into a logout. Closed by refusing on <code>geteuid()</code>
+                <em>before the prompt</em>, so no password is read and the two outcomes cannot
+                differ.</li>
+            <li><strong>The 32769th message on a connection slot vanished, and its sender waited for
+                ever.</strong> The per-slot generation counter was sixteen bits wide inside a signed
+                32-bit rcvid, so it reached bit 31 and an ordinary message arrived looking like an error.
+                The server skipped it; the kernel had already completed the rendezvous, so that sender
+                stayed reply-blocked for good while the server went on serving everyone else, healthily
+                and visibly. Fifteen bits still gives ample protection against a reused slot.</li>
+            <li><strong>A thread destroyed by another could be scheduled and run.</strong> The victim was
+                zombified and had its address space dropped under the comment "it never runs again" — but
+                nothing took a merely runnable victim off the run queue. Scheduled, it ran on the kernel
+                boot page table and returned to U-mode at an address not mapped there. Reproduced on the
+                Unmatched with a spawn loop and rapid Ctrl-C.</li>
+            <li><strong>Every program that returned from <code>main</code> skipped its own exit.</strong>
+                <code>crt0</code> called <code>_exit</code>, and C says returning from main is calling
+                <code>exit</code>: atexit handlers never ran, stdio never flushed, and descriptors were
+                never handed back to the servers holding them. The last one is what bites — a producer in
+                <code>a | b</code> ended without telling the pipe, so the consumer waited for an
+                end-of-file that could not arrive.</li>
+            <li><strong>Every process spawned on QSOE/N started with an empty environment.</strong> The
+                spawn handler built the child's initial stack from a literal empty vector instead of the
+                one its caller passed, so <code>login</code> could set <code>USER</code> and
+                <code>HOME</code>, spawn a shell, and the shell would have neither. QSOE/L had been
+                delivering it all along, which is exactly the kind of divergence a shared userspace
+                exists to make visible.</li>
+          </ul>
+            </div>
+          </details>
+        </div>
+        <p style="margin-top:1.4rem; font-size:0.9rem;">
+           <a href="#" id="expand-all">Open every section</a> · the same ground is covered in the
+           per-component <code>CHANGELOG.md</code> files in the
+           <a href="https://gitlab.com/qsoe">source repositories</a>.</p>
+      </section>
+
+
+      <!-- ================= GAPS ================= -->
+      <section class="panel" id="gaps">
+        <h2>Known gaps</h2>
+        <p class="lead">Stated rather than implied away. These are the things 0.2 does not do, and
+           most of them have a release number against them.</p>
+
+        <ul class="tidy">
+          <li><strong>There is no loading on demand.</strong> taskman binds every library a program
+              names at the moment it spawns it; <code>dlopen()</code> is declared and unimplemented, so
+              a program that calls it fails at link time rather than surprising anyone at run time. Two
+              foundations wait behind it, and 0.3 states them: library text is copied per process rather
+              than shared, and every load is serialized through taskman's single dispatch.</li>
+          <li><strong>A credential on QSOE/L is fixed when the connection is made.</strong> The badge is
+              stamped at <code>ConnectAttach</code> and cannot be restamped, so a process that changes
+              identity is still reported as it was on connections it already holds. QSOE/N reads the
+              identity on every send.</li>
+          <li><strong><code>poll()</code> is a stop-gap</strong> that reports readiness
+              unconditionally, and announces itself as such on first call. The follow-up
+              <code>read()</code> blocks inside the resource manager until a byte actually arrives,
+              which gives the line editor functional interactive behavior without a real readiness
+              layer. Pulse-based per-fd readiness is the real answer.</li>
+          <li><strong>A thread spinning in U-mode without ever blocking cannot be killed.</strong> The
+              blocked half of that shipped; the spinning half is the ThreadCancel work package.</li>
+          <li><strong><code>fs-tmpfs</code> cannot truncate to a smaller nonzero size</strong> — a
+              partial shrink returns EINVAL. Truncate to zero and full removal work.</li>
+          <li><strong>A deferred reply can still park a hand-rolled server.</strong> QSP escaped this by
+              moving to the shared ring; consoles and pipes still ride the framework path.</li>
+          <li><strong>MSI for the xHCI is polled</strong>, every 8&nbsp;ms, because a controller found
+              on PCI has no wired source to attach. For a keyboard this costs nothing anyone can
+              perceive.</li>
+          <li><strong>There is no deep idle on the K3.</strong> An idle hart issues a plain
+              <code>wfi</code>, and the vendor firmware clears every core and cluster power-down vote,
+              so that parks the hart without power-gating it. Asking for a real suspend state means SBI
+              HSM suspend, driving the <code>idle-states</code> the device tree already describes.</li>
+          <li><strong>QSOE/L cannot yet have both a handed-over console and an NVMe root on the
+              Unmatched.</strong> The firmware-window overlay that makes the console reachable puts
+              <code>devb-nvme</code>'s BAR0 out of reach, because that board's PCI apertures share
+              device untypeds. A console must not cost the root filesystem.</li>
+          <li>The K3 is <strong>QSOE/N only</strong> — it is too new for seL4.</li>
+        </ul>
+      </section>
+
+      <!-- ================= GET IT ================= -->
+      <section class="panel" id="get">
+        <h2>Getting it</h2>
+        <p>Pre-built images are published at
+           <a href="https://github.com/qsoe-dev/dl">github.com/qsoe-dev/dl</a>; the
+           <a href="index.html">front page</a> lists what each file is and how to run it under QEMU or
+           install it on a board. To build from source:</p>
+        <pre class="cmd">git clone https://gitlab.com/qsoe/os
+cd os
+make prepare   <span class="c"># fetch the 0.2 component set (see component.list)</span>
+make           <span class="c"># build both variants: QSOE/N, then QSOE/L</span>
+make dist      <span class="c"># optional: the QEMU disk images</span></pre>
+        <p>The manuals — <code>Design.pdf</code>, <code>UserGuide.pdf</code>,
+           <code>ProgrammingBook.pdf</code>, <code>AppPortingGuide.pdf</code>,
+           <code>Networking.pdf</code> and, new in 0.2, <code>LibcReference.pdf</code> — are published
+           alongside each release at
+           <a href="https://github.com/qsoe-dev/doc">github.com/qsoe-dev/doc</a>. Documentation is a
+           release gate: no version ships before the manuals are brought up to the tree.</p>
+        <p class="note">Next is <strong>0.3</strong> — writes in <code>qrvfs</code>:
+           <code>O_CREAT</code>/<code>O_TRUNC</code>, create and unlink, <code>realpath</code> and
+           symlink resolution, and QSOE/L moving to the July&nbsp;2026 seL4 release. A disk that is
+           only read can afford to be approximate; a disk that is compiled on cannot — and 0.6
+           compiles on it.</p>
+        <a class="back-link" href="index.html">Back to QSOE Systems</a>
+      </section>
+
+    </main>
+
+    <footer>© <span id="year">2026</span> QSOE Systems</footer>
+  </div>
+
+  <script>
+    (function () {
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // a link into a collapsed section must open it, not silently do nothing
+      function openTarget() {
+        var id = (location.hash || '').replace('#', '');
+        if (!id) return;
+        var el = document.getElementById(id);
+        while (el) {
+          if (el.tagName === 'DETAILS') el.open = true;
+          el = el.parentElement;
+        }
+      }
+      window.addEventListener('hashchange', openTarget);
+      openTarget();
+
+      var all = document.getElementById('expand-all');
+      all.addEventListener('click', function (e) {
+        e.preventDefault();
+        var folds = document.querySelectorAll('.fold');
+        var anyClosed = Array.prototype.some.call(folds, function (f) { return !f.open; });
+        Array.prototype.forEach.call(folds, function (f) { f.open = anyClosed; });
+        all.textContent = anyClosed ? 'Close every section' : 'Open every section';
+      });
+    })();
+  </script>
+</body>
+</html>

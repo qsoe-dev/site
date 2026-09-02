@@ -111,10 +111,10 @@
         <h2>QSOE</h2>
         <p class="lead">A QNX-inspired operating system with selectable kernels.</p>
 
-        <p class="news"><strong>News:</strong> QSOE&nbsp;0.1 is out — the first public release of
-           the unified two-kernel system (June&nbsp;2026).
-           <a href="https://qsoe-dev.blogspot.com/2026/06/qsoe-project-v01-is-released.html">Read the
-           announcement&nbsp;→</a></p>
+        <p class="news"><strong>News:</strong> QSOE&nbsp;0.2 is out — a text console on the screen
+           with a USB keyboard on it, a writable filesystem, and QSP transparent distributed
+           networking (August&nbsp;2026).
+           <a href="qsoe_0.2.html">What&#39;s new in&nbsp;0.2&nbsp;→</a></p>
 
         <p>QSOE ships in two variants that share one userspace and one build system.
            <span class="mono">QSOE/N</span> runs on <strong>Skimmer</strong>, a microkernel written
@@ -131,8 +131,9 @@
            userspace, synchronous message-passing IPC, and the resource-manager model for services.</p>
 
         <p>QSOE targets 64-bit RISC-V (<code>RV64</code>, <code>Sv39</code>) on the SiFive HiFive
-           Unmatched (<code>FU740</code>), with QEMU used for day-to-day development. Both QSOE variants
-           now boot on real hardware. Released under Apache-2.0.</p>
+           Unmatched (<code>FU740</code>) and the SpacemiT K3 Pico-ITX, with QEMU used for day-to-day
+           development. Both QSOE variants boot on real hardware; the K3 — RVA23-class, sixteen harts,
+           pure AIA — is QSOE/N only for now, being too new for seL4. Released under Apache-2.0.</p>
 
         <div class="meta-row">
           <a href="https://gitlab.com/qsoe/os">gitlab.com/qsoe/os</a>
@@ -146,30 +147,41 @@
               <p>QSOE can be built from source or installed from pre-built binaries. Ready-made
                  images for each release are published at
                  <a href="https://github.com/qsoe-dev/dl">github.com/qsoe-dev/dl</a>
-                 (current release: <strong>0.1</strong>). The files are:</p>
+                 (current release: <strong>0.2</strong>). The files are:</p>
               <ul class="tidy dl-list">
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/skimmer.bin"><code>skimmer.bin</code></a>
-                    — the Skimmer microkernel: the kernel of the <strong>QSOE/N</strong> variant. A raw
-                    binary image, loaded by the bootloader (or QEMU) together with the userspace package below.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/modpkg.cpio"><code>modpkg.cpio</code></a>
+                <li><strong>The Skimmer microkernel</strong> — the kernel of the <strong>QSOE/N</strong>
+                    variant. A raw binary image, loaded by the bootloader (or QEMU) together with the userspace
+                    package below. Skimmer is linked once per board, so take the one for yours:
+                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/skimmer-sifive.bin"><code>skimmer-sifive.bin</code></a> (HiFive
+                    Unmatched), <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/skimmer-k3.bin"><code>skimmer-k3.bin</code></a>
+                    (SpacemiT K3), or <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/skimmer-qemu.bin"><code>skimmer-qemu.bin</code></a>
+                    (QEMU <code>virt</code>). What the board decides is the load address; the platform
+                    itself is read from the device tree at run time. So the QEMU and Unmatched images are
+                    byte-for-byte identical — either name gets you the same kernel — while the K3, whose
+                    DRAM starts at 4&nbsp;GiB, is linked for its own address and its image is its own.
+                    Take the K3's across that line, in either direction, and the machine loads a kernel
+                    and then does nothing recognizable.</li>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/modpkg.cpio"><code>modpkg.cpio</code></a>
                     — the module package: the shared QSOE userspace (taskman, <code>init</code>, the C library,
-                    the shell, drivers and utilities) as a CPIO archive. <strong>QSOE/N</strong> boots it as an
-                    initrd alongside <code>skimmer.bin</code>.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/qsoe-l-qemu.elf"><code>qsoe-l-qemu.elf</code></a>
+                    the shell, the file manager, drivers and utilities) as a CPIO archive. One archive for every
+                    board and both variants. <strong>QSOE/N</strong> boots it as an initrd alongside
+                    <code>skimmer-&lt;board&gt;.bin</code>.</li>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/qsoe-l-qemu.elf"><code>qsoe-l-qemu.elf</code></a>
                     — the <strong>QSOE/L</strong> variant (on the seL4 kernel) as a single, self-contained ELF
                     for the QEMU <code>virt</code> machine. It bundles the elfloader, the seL4 kernel, taskman and
                     the userspace together — nothing else is needed to boot.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/qsoe-l-sifive.elf"><code>qsoe-l-sifive.elf</code></a>
-                    — the same QSOE/L image, built for the SiFive HiFive Unmatched (FU740) board.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/mrbml-riscv64.efi"><code>mrbml-riscv64.efi</code></a>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/qsoe-l-sifive.elf"><code>qsoe-l-sifive.elf</code></a>
+                    — the same QSOE/L image, built for the SiFive HiFive Unmatched (FU740) board. There is no
+                    K3 equivalent: that SoC is too new for seL4.</li>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/mrbml-riscv64.efi"><code>mrbml-riscv64.efi</code></a>
                     — <strong>mr-bml</strong>, QSOE's own bootloader (an EFI application for RISC-V). It
                     can load either variant and drives the boot menu on real hardware.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/nvme.img.gz"><code>nvme.img.gz</code></a>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/nvme.img.gz"><code>nvme.img.gz</code></a>
                     — a ready-to-run, self-booting QEMU disk image (GPT). Its EFI partition holds
                     <code>mr-bml</code>, and an on-disk root holds both kernels — so QEMU boots straight to the
                     mr-bml menu, no <code>-kernel</code> needed. The fastest way to see QSOE run; see
                     <strong>Running under QEMU</strong> below.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.1/bin/virtio.img.gz"><code>virtio.img.gz</code></a>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.2/bin/virtio.img.gz"><code>virtio.img.gz</code></a>
                     — a companion root disk used <em>only</em> when running <strong>QSOE/L</strong> under QEMU
                     (stock seL4 predates the interrupt controller QEMU's NVMe needs, so it mounts its root from a
                     virtio disk instead). Not needed for QSOE/N or for real hardware.</li>
@@ -177,7 +189,8 @@
               <p>In short: to <strong>run it in QEMU</strong>, grab <code>nvme.img.gz</code>
                  (plus <code>virtio.img.gz</code> for QSOE/L) and see <strong>Running under QEMU</strong>.
                  To put it on <strong>real hardware</strong>, you need <code>mrbml-riscv64.efi</code>
-                 plus the kernels — <strong>QSOE/N</strong> uses <code>skimmer.bin</code> + <code>modpkg.cpio</code>,
+                 plus the kernels — <strong>QSOE/N</strong> uses <code>skimmer-&lt;board&gt;.bin</code> +
+                 <code>modpkg.cpio</code>,
                  <strong>QSOE/L</strong> uses one of the <code>qsoe-l-*.elf</code> images — and see
                  <strong>Installation</strong>.</p>
             </div>
@@ -213,9 +226,10 @@ NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh</pre>
           <details class="fold">
             <summary>Installation</summary>
             <div class="fold-body">
-              <p>Real hardware, real disk. QSOE 0.1 boots on the SiFive HiFive Unmatched (FU740); the SpaceMiT
-                 K3 is a future target. This assumes a board already running Linux — you'll be placing files on
-                 its existing EFI and boot partitions, so familiarity with the board's firmware is expected.</p>
+              <p>Real hardware, real disk. QSOE 0.2 boots on the SiFive HiFive Unmatched (FU740) and on the
+                 SpacemiT K3 Pico-ITX; on the K3, QSOE/N only. This assumes a board already running Linux —
+                 you'll be placing files on its existing EFI and boot partitions, so familiarity with the
+                 board's firmware is expected.</p>
               <p>The boot model is simple: <strong>mr-bml</strong> lives in the EFI System Partition; it reads
                  its menu and the kernels from an <strong>ext2/3/4</strong> partition; the chosen variant then
                  mounts its own root from a <strong>fs-qrv</strong> partition.</p>
@@ -225,13 +239,13 @@ NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh</pre>
                     <code>EFI/BOOT/BOOTRISCV64.EFI</code> (the UEFI removable-media path), or register it with
                     <code>efibootmgr</code> as a boot entry.</li>
                 <li>On your boot/root filesystem, create <code>/boot/qsoe/</code> and copy the kernels there:
-                    <code>skimmer.bin</code> + <code>modpkg.cpio</code> for QSOE/N,
+                    your board's <code>skimmer-&lt;board&gt;.bin</code> + <code>modpkg.cpio</code> for QSOE/N,
                     <code>qsoe-l-sifive.elf</code> for QSOE/L.</li>
                 <li>Create <code>/boot/mr-bml/mr-bml.cfg</code> with one entry per variant — for example:</li>
               </ol>
               <pre class="cmd"><span class="c"># /boot/mr-bml/mr-bml.cfg  — adjust the mainfs= partition to your disk</span>
 menuentry 'QSOE/N (Skimmer)' {
-    kernel /boot/qsoe/skimmer.bin mainfs=/dev/nvme0n1p8
+    kernel /boot/qsoe/skimmer-sifive.bin mainfs=/dev/nvme0n1p8
     modpkg /boot/qsoe/modpkg.cpio
 }
 menuentry 'QSOE/L (seL4)' {
@@ -271,39 +285,78 @@ make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, vi
                     — programming for QSOE, including the <strong>Resource Server Framework</strong> chapter.</li>
                 <li><a href="https://github.com/qsoe-dev/doc/raw/main/AppPortingGuide.pdf"><code>AppPortingGuide.pdf</code></a>
                     — porting Unix (and QNX) software to QSOE: what to account for — no <code>fork()</code>,
-                    no <code>brk()</code>, <code>select()</code> via <code>poll()</code>, and the rest.</li>
+                    no <code>brk()</code>, <code>select()</code> via <code>poll()</code>,
+                    <code>ioctl()</code> via <code>devcontrol()</code>, and the rest.</li>
+                <li><a href="https://github.com/qsoe-dev/doc/raw/main/Networking.pdf"><code>Networking.pdf</code></a>
+                    — QSP, the transparent distributed networking: stations and call signs, circuits and
+                    transactions, and why a resource manager reached across the wire is never told that
+                    anything happened.</li>
+                <li><a href="https://github.com/qsoe-dev/doc/raw/main/LibcReference.pdf"><code>LibcReference.pdf</code></a>
+                    — the C library reference, new in 0.2. A delta rather than a complete reference: the
+                    functions libc gained since 0.1, grouped by subject, in the entry shape a QNX reader
+                    already knows.</li>
               </ul>
             </div>
           </details>
           <details class="fold">
             <summary>Roadmap</summary>
             <div class="fold-body">
-              <p>It is often said that the Linux kernel has no roadmap. QSOE does — the ten releases
-                 that carry it from today's <strong>0.1</strong> to the unified <strong>1.0</strong> are
-                 mapped out. A working plan, not a contract: milestones may shift as the work reveals
-                 what's really next.</p>
+              <p>It is often said that the Linux kernel has no roadmap. QSOE does — the releases
+                 that carry it from today's <strong>0.2</strong> to <strong>1.0</strong> are mapped
+                 out, feature by feature. A working plan, not a contract: milestones shift as the
+                 work reveals what is really next, and they have.</p>
+              <p>1.0 is a capability rather than a compatibility claim: <em>a RISC-V real-time
+                 operating environment with a stated, measured worst-case latency, sustained for a
+                 week under full load across three different boards, able to rebuild itself, with a
+                 documented porting path from QNX and POSIX.</em> Four criteria, each pass or fail.</p>
               <ul class="roadmap">
-                <li class="now"><code>0.1</code> — <strong>First public release.</strong> Two-kernel
-                    foundation, shared userspace, read-only <code>fs-qrv</code> at <code>/usr</code>,
-                    interactive getty + login, sources opened. <em>(current)</em></li>
-                <li><code>0.2</code> — Text-mode console on the GK208 ("Kepler"): a watchable on-device
-                    display, so the real-time audio work can be seen on hardware, not just over serial.</li>
-                <li><code>0.3</code> — First writable filesystem: qrvfs gains file create/unlink,
-                    <code>O_CREAT</code>/<code>O_TRUNC</code>, <code>realpath</code> and symlink resolution.</li>
-                <li><code>0.4</code> — The canonical dual-panel file manager: QSOE's flagship application,
-                    exercising the writable filesystem and the userspace end to end.</li>
-                <li><code>0.5</code> — First <code>deva-hdmi</code> audio device, with the priority /
-                    interrupt / scheduling groundwork the hard-real-time path needs.</li>
-                <li><code>0.6</code> — Comprehensive conformance suites, and the audio real-time package
-                    (up to N hard-real-time tasks on an N-CPU system).</li>
-                <li><code>0.7</code> — <span class="tbd">to be defined</span> nearer the time.</li>
-                <li><code>0.8</code> — Second hardware target (SpaceMiT K3, RVA23-class) and the AIA
-                    interrupt architecture (IMSIC/APLIC), so MSI/MSI-X works uniformly across boards.</li>
-                <li><code>0.9</code> — QNX-libc compatibility push: recompile and run a target set of
-                    QNX-source utilities, closing the remaining libc gaps.</li>
-                <li><code>1.0</code> — First stable release: API comparable to QNX 6.x; intended
-                    for porting QNX userland software (<code>fork</code> → <code>posix_spawn</code>).</li>
+                <li><code>0.1</code> — <strong>Foundation and login.</strong> Both kernels boot to an
+                    interactive shell on one shared, dynamically linked userspace; read-only
+                    <code>fs-qrv</code> at <code>/usr</code>, spawn from disk, getty and login.
+                    Sources opened under Apache-2.0. <em>(released June 2026)</em></li>
+                <li class="now"><code>0.2</code> — <strong>Video console and QSP.</strong> A text
+                    console on a handed-over graphics controller with a USB keyboard on it, and QSP
+                    transparent distributed networking over a shared descriptor ring. The system
+                    stops being something observed over a serial cable and becomes something a
+                    person sits at. <em>(current —
+                    <a href="qsoe_0.2.html">release notes</a>)</em></li>
+                <li><code>0.3</code> — <strong>Writable filesystem.</strong> <code>qrvfs</code> gains
+                    writes: <code>O_CREAT</code>/<code>O_TRUNC</code>, create and unlink,
+                    <code>realpath</code> and symlink resolution; QSOE/L moves to the July&nbsp;2026
+                    seL4 release. A disk that is only read can afford to be approximate; a disk that
+                    is compiled on cannot — and 0.6 compiles on it.</li>
+                <li><code>0.4</code> — <strong>Sound out: <code>deva-hdmi</code>.</strong> HDMI audio
+                    brought up as a device. Audio is the instrument for every measurement from here
+                    to 1.0 — a dropped buffer is audible long before it is visible — which is why it
+                    comes this early.</li>
+                <li><code>0.5</code> — <strong>The real-time package.</strong> Priorities, interrupt
+                    service threads, priority inheritance and bounded paths end to end: up to N
+                    hard-real-time tasks on an N-CPU system, with every step between an interrupt and
+                    the thread that services it accounted for.</li>
+                <li><code>0.6</code> — <strong>Self-hosting.</strong> The compiler runs on the target,
+                    against the writable filesystem, and rebuilds QSOE from source on the board.</li>
+                <li><code>0.7</code> — <strong>Hardening, and the first long run.</strong> Leak hunts,
+                    lifetime and teardown, error paths nobody has taken — everything the soak will
+                    break, broken deliberately first. Then 24 hours of continuous audio under
+                    sustained multi-core load with live NVMe and Ethernet traffic.</li>
+                <li><code>0.8</code> — <strong>The number.</strong> The week-long soak, and the
+                    worst-case latency figure it earns — published with its conditions, its
+                    methodology and its instrumentation, so the result can be reproduced and argued
+                    with from outside the project.</li>
+                <li><code>0.9</code> — <strong>The porting set.</strong> A named set of QNX and POSIX
+                    programs recompiled and running, with two documented edits:
+                    <code>fork</code>&nbsp;→&nbsp;<code>posix_spawn</code> and
+                    <code>select</code>&nbsp;→&nbsp;<code>poll</code>.</li>
+                <li><code>1.0</code> — <strong>QSOE.</strong> All four criteria met on every supported
+                    board.</li>
               </ul>
+              <p style="margin-top:1.2rem;"><strong>Throughout:</strong> both kernels advance together
+                 — the userspace is identical by construction, NQ leads on the real-time path and LQ
+                 follows where the seam can express it. Platforms at 1.0 are the SiFive Unmatched
+                 (FU740), the SpacemiT K3 Pico-ITX, the StarFive VisionFive&nbsp;2 and QEMU
+                 <code>virt</code> — three different SoCs with three different Ethernet controllers,
+                 speaking one protocol to each other. Packaging is deliberately not a 1.0 milestone;
+                 documentation is a release gate.</p>
             </div>
           </details>
         </div>
