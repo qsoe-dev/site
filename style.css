@@ -228,6 +228,9 @@ footer {
   border: 1px solid var(--panel-edge);
   box-shadow: 0 14px 34px -20px var(--shadow);
 }
+/* Half-width: a console capture stays legible well below the column width,
+   and at full width it dominates the page it is only illustrating. */
+.shot-half { max-width: 457px; margin-left: auto; margin-right: auto; }
 .shot figcaption {
   font-family: var(--font-mono); font-size: 0.74rem;
   color: var(--ink-soft); margin-top: 0.6rem; letter-spacing: 0.01em;
