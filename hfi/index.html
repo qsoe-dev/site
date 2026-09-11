@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HFI — Harmonic Firmware Initiative · QSOE Systems</title>
-  <meta name="description" content="HFI, the Harmonic Firmware Initiative: an open, U-Boot–based firmware experience layer that gives any RISC-V board a real power-on screen, boot menus, and a Set-Up editor. By QSOE Systems.">
+  <meta name="description" content="HFI, the Harmonic Firmware Initiative: an open, U-Boot–based firmware experience layer that gives a RISC-V board a real power-on screen, boot menus, a Set-Up editor, and a text console it can hand to the operating system. Running on the SiFive HiFive Unmatched, the SpacemiT K3 and the StarFive VisionFive 2. By QSOE Systems.">
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,35 @@
   <link rel="stylesheet" href="../style.css">
   <style>
     /* ---- HFI page-specific components, expressed in the shared tokens ---- */
+
+    /* the news bar, the same rule as the front page's */
+    .news {
+      margin: 0 0 1rem;
+      padding: 0.7rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      border-radius: 0 8px 8px 0;
+      color: var(--ink) !important;
+    }
+    .news strong { color: var(--accent-deep); }
+
+    /* the board cards under "Running today" */
+    .boards { margin: 1.1rem 0 0.4rem; }
+    .board {
+      padding: 0.85rem 0 0.95rem;
+      border-top: 1px solid rgba(14, 124, 147, 0.18);
+    }
+    .board:last-child { border-bottom: 1px solid rgba(14, 124, 147, 0.18); }
+    .board .b {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      margin: 0 0 0.35rem;
+    }
+    .board p { margin: 0; color: var(--ink-soft); }
+    .board p + p { margin-top: 0.5rem; }
 
     /* stack the sub-page panels (home shows one at a time; here they flow) */
     .panels .panel + .panel { margin-top: 1.5rem; }
@@ -180,6 +209,12 @@
           own display — a firmware identity and POST screen, hardware enumeration, a
           Set-Up configuration editor, and boot selection — the way every PC has since
           the 1980s, and the way no bare RISC-V board does today.</p>
+
+        <p class="news"><strong>New:</strong> HFI&nbsp;BIOS&nbsp;1.4 is out — a fourth board, the StarFive
+          VisionFive&nbsp;2, and a text console that survives into the operating system, painted by a
+          processor the OS cannot even see (September&nbsp;2026).
+          <a href="hfi-bios-1.4.html">What&#39;s new in&nbsp;1.4&nbsp;→</a></p>
+
         <p>HFI is that effort itself: the vision, the design decisions, and the
           coordination. It defines the approach, standardizes the interface board makers
           build to, maintains a reference implementation, and spreads the know-how. The
@@ -187,8 +222,8 @@
           screen below is what that software draws.</p>
 
         <div class="post" role="img"
-             aria-label="A simulated HFI BIOS power-on screen: HFI RISC-V 64-bit System BIOS version 1.0, QSOE Systems. Board SiFive HiFive Unmatched, 16384 MB OK. USB devices detected OK, NVMe storage scanned. Press DEL to run Set-Up.">
-<span class="l"><span class="risc">RISC-V</span><span class="blue">HFI</span> RISC-V 64-bit System BIOS  <span class="dim">version 1.0</span></span>
+             aria-label="A simulated HFI BIOS power-on screen: HFI RISC-V 64-bit System BIOS version 1.4, QSOE Systems. Board SiFive HiFive Unmatched, 16384 MB OK. USB devices detected OK, NVMe storage scanned. Press DEL to run Set-Up.">
+<span class="l"><span class="risc">RISC-V</span><span class="blue">HFI</span> RISC-V 64-bit System BIOS  <span class="dim">version 1.4</span></span>
 <span class="l"><span class="dim">Copyright (c) 2026 </span><span class="blue">QSOE Systems</span><span class="dim">.  All rights reserved.</span></span>
 <span class="l">&nbsp;</span>
 <span class="l">Board: SiFive HiFive Unmatched (FU740)</span>
@@ -242,12 +277,20 @@
           board that uses it inherits the whole experience above — unchanged.</p>
         <p>That is the harmonization the name points to: one interface, many boards, and
           the same firmware experience carried forward to the next SoC.</p>
+        <p>The interface does not end when the firmware does. What a VideoBIOS module
+          publishes is a <strong>handoff block</strong>: a text grid in memory and a doorbell
+          to ring when it changes. A bootloader draws its menu through it; an operating system
+          that understands it has a text console on the monitor with no display driver at all,
+          from the first instruction it executes. On the K3 the doorbell wakes a processor
+          borrowed from the machine; on the VisionFive&nbsp;2 it wakes one the machine was not
+          using — the JH7110's monitor core, which no operating system can schedule. QSOE runs
+          its console on both.</p>
 
         <div class="layers" role="img"
-             aria-label="The boot stack, top to bottom: the operating system; HFI BIOS providing POST, menus, Set-Up and console; the unified VideoBIOS interface on MMC or NVMe, which is the contract; U-Boot and OpenSBI; and the board silicon.">
+             aria-label="The boot stack, top to bottom: the operating system; HFI BIOS providing POST, menus, Set-Up and console; the unified VideoBIOS interface, which is the contract; U-Boot and OpenSBI; and the board silicon.">
           <div class="layer"><span class="t">Operating system</span> <span class="s">· the boot target</span></div>
           <div class="layer is-hfi"><span class="t">HFI&nbsp;BIOS</span> <span class="s">· POST · menus · Set-Up · console</span></div>
-          <div class="layer is-contract"><span class="t">Unified VideoBIOS interface</span> <span class="s">· on MMC / NVMe — the contract</span></div>
+          <div class="layer is-contract"><span class="t">Unified VideoBIOS interface</span> <span class="s">· the contract</span></div>
           <div class="layer"><span class="t">U-Boot · OpenSBI</span></div>
           <div class="layer"><span class="t">Board silicon</span> <span class="s">· CPU · PCIe · display controller · storage</span></div>
         </div>
@@ -256,28 +299,64 @@
       <!-- ===================== RUNNING TODAY ===================== -->
       <section class="panel">
         <div class="eyebrow">Running today</div>
-        <h2>The hardest case, first</h2>
-        <p>The reference implementation runs on a SiFive HiFive Unmatched, driving its
-          display through a discrete NVIDIA GK-208 over PCIe — brought up natively inside
-          U-Boot, with no legacy VGA and no x86 assumptions. It is the hardest case on
-          purpose: if a scavenged Kepler card can present a coherent BIOS on RISC-V, a
-          board with an integrated display controller is the easy one.</p>
+        <h2>Three boards, one experience</h2>
+        <p>It began with the hardest case on purpose: a SiFive HiFive Unmatched driving a
+          discrete NVIDIA GK-208 over PCIe, brought up natively inside U-Boot with no legacy
+          VGA and no x86 assumptions. If a ten-year-old Kepler card could present a coherent BIOS
+          on RISC-V, a board with its display controller on the SoC would be the easy one. Two
+          such boards followed, and the same firmware — the same POST, the same Set-Up, the same
+          console — now comes up on all three, each through a VideoBIOS module of its own.</p>
+
+        <div class="boards">
+          <div class="board">
+            <p class="b">SiFive HiFive Unmatched · FU740</p>
+            <p>The reference board. The GK-208 is brought up from its registers — modeset, the
+              display engine, the graphics engine and its context — and its character generator
+              is an engine on the card, kicked through a GPFIFO. Boots from the SD card; the
+              environment lives in the on-board NOR.</p>
+          </div>
+          <div class="board">
+            <p class="b">SpacemiT K3 Pico-ITX · 16 harts</p>
+            <p>The display controller is on the SoC, over DisplayPort, and it has no engine that
+              can turn a cell into a glyph. So the VideoBIOS module <strong>borrows a hart from
+              the machine</strong> and parks it on the doorbell: it repaints, and it is returned
+              to the operating system at hand-off. Cold boot from NOR to a Linux desktop, with
+              USB, UFS, three PCIe root complexes, the network and the fan all brought up by
+              firmware.</p>
+          </div>
+          <div class="board">
+            <p class="b">StarFive VisionFive 2 · JH7110</p>
+            <p>HDMI from the SoC's DC8200, through an Innosilicon transmitter. The character
+              generator runs on the <strong>S7 monitor core</strong> — a hart with no supervisor
+              mode that no operating system can use, marked disabled in every device tree in its
+              family, and left idle by every firmware before this one. The SPL parks it, the
+              VideoBIOS module adopts it, and a bootloader or an OS repaints the screen with a
+              single store. <a href="hfi-bios-1.4.html">New in 1.4.</a></p>
+          </div>
+        </div>
 
         <figure class="shot">
           <img src="./img/hfi-post.jpg" width="872" height="703"
                alt="Photograph of the HFI BIOS power-on screen running on a SiFive HiFive Unmatched: the blue RISC-V logo, board and CPU inventory, USB and NVMe enumeration, and the prompt to press Del to run Set-Up.">
           <figcaption>HFI&nbsp;BIOS on a SiFive HiFive Unmatched — the actual power-on screen, photographed.</figcaption>
         </figure>
+        <!-- Photograph slots: the K3's POST, and the VisionFive 2 with mr-bml or QSOE on the panel. -->
 
-        <p>What <strong>HFI&nbsp;BIOS v1.0</strong> puts on the screen today:</p>
+        <p>What <strong>HFI&nbsp;BIOS&nbsp;1.4</strong> puts on the screen today:</p>
         <ul class="tidy">
           <li><strong>A power-on greeting</strong> — the VideoBIOS identity, the main
-            POST screen, the memory count, and USB / NVMe enumeration.</li>
+            POST screen, the memory count, USB, NVMe and UFS enumeration, and the network
+            link brought up and reported.</li>
           <li><strong>A configuration editor</strong> — the Set-Up screen, in the idiom
-            of the classic Award BIOS: standard and advanced settings, PC Health Status,
-            boot order, and flashing of the NOR firmware.</li>
+            of the classic Award BIOS: standard and advanced settings, PC Health Status with
+            the board's own sensors, boot order, and the <strong>Flash Utility</strong>, which
+            writes a firmware package to the board's NOR and refuses one built for a different
+            board.</li>
           <li><strong>A system console</strong> — the U-Boot prompt underneath it all,
             a keystroke away for when you want it.</li>
+          <li><strong>A console for whatever comes next</strong> — the handoff block, through
+            which a bootloader draws its menu on the monitor and an operating system that
+            understands it keeps a text console after the firmware is gone.</li>
         </ul>
 
         <figure class="shot">
@@ -287,8 +366,35 @@
         </figure>
 
         <p class="watch">▶ Watch it happen:
-          <a href="https://youtu.be/v4k1tLbnZMs" target="_blank" rel="noopener">HFI&nbsp;BIOS boots the Unmatched</a> — POST, Set-Up,
-          and finally mr-bml on screen.</p>
+          <a href="https://www.youtube.com/watch?v=GBVH-6bD9yI" target="_blank" rel="noopener">HFI&nbsp;BIOS on the SpacemiT K3</a> —
+          cold boot from NOR, POST, Set-Up, and mr-bml on the panel; and the original,
+          <a href="https://youtu.be/v4k1tLbnZMs" target="_blank" rel="noopener">HFI&nbsp;BIOS boots the Unmatched</a>.</p>
+      </section>
+
+      <!-- ===================== GET IT ===================== -->
+      <section class="panel">
+        <div class="eyebrow">Get it</div>
+        <h2>Downloads and source</h2>
+        <p>One firmware package per board, written with the Flash Utility from Set-Up — or by the
+          board's own means from a running Linux. The current release is <strong>1.4</strong>;
+          the <a href="hfi-bios-1.4.html">release notes</a> say what changed and what is known not
+          to work yet.</p>
+        <ul class="tidy">
+          <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw"><code>HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw</code></a>
+            — StarFive VisionFive&nbsp;2 (v1.3B).</li>
+          <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-SpaceMiT-K3-PicoITX-SysBIOS-1.4.hfifw"><code>HFI-SpaceMiT-K3-PicoITX-SysBIOS-1.4.hfifw</code></a>
+            — SpacemiT K3 Pico-ITX.</li>
+          <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw"><code>HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw</code></a>
+            — SiFive HiFive Unmatched.</li>
+        </ul>
+        <p>Every release's packages are at
+          <a href="https://github.com/qsoe-dev/hfi-bios">github.com/qsoe-dev/hfi-bios</a>. The
+          source is at <a href="https://gitlab.com/bios-riscv/hfi-bios">gitlab.com/bios-riscv/hfi-bios</a>
+          — <code>make TARGET=visionfive2</code>, or <code>k3</code>, <code>unmatched</code>,
+          <code>qemu</code>, fetches U-Boot and OpenSBI itself — and the VideoBIOS modules are their own
+          repositories under <a href="https://gitlab.com/bios-riscv/videobios">gitlab.com/bios-riscv/videobios</a>,
+          one per display controller plus the runtime they share. The two ABI headers a bootloader or
+          an operating system needs are MIT, so any consumer can carry them verbatim.</p>
       </section>
 
       <!-- ===================== INITIATIVE ===================== -->
