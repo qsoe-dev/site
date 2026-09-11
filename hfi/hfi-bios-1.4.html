@@ -567,6 +567,37 @@
           <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw"><code>HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw</code></a>
               — SiFive HiFive Unmatched: SPL and FIT, for a NOR laid out with the two loader partitions.</li>
         </ul>
+        <h3>Extracting the stages</h3>
+        <p>A package is a FIT — a flattened image tree — and <code>dumpimage</code> from
+           <code>u-boot-tools</code> lists and extracts it. <code>dumpimage -l</code> on any of the
+           three names its images; the extraction lines below are what that listing
+           gives. Which partition or offset each stage belongs at is described above, per
+           board, and is the reader's business from there.</p>
+        <pre class="cmd"><span class="c"># SpacemiT K3 Pico-ITX: one image, U-Boot proper with the board's device tree</span>
+dumpimage -T flat_dt -p 0 -o u-boot.itb HFI-SpaceMiT-K3-PicoITX-SysBIOS-1.4.hfifw
+
+<span class="c"># SiFive HiFive Unmatched: the SPL, then the OpenSBI + U-Boot FIT</span>
+dumpimage -T flat_dt -p 0 -o u-boot-spl.bin HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw
+dumpimage -T flat_dt -p 1 -o u-boot.itb     HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw
+
+<span class="c"># StarFive VisionFive 2: the same two -- but this SPL carries the boot ROM's header</span>
+<span class="c"># (the "sfspl" form, u-boot-spl.bin.normal.out); the raw SPL is not what the ROM loads</span>
+dumpimage -T flat_dt -p 0 -o u-boot-spl.bin.normal.out HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw
+dumpimage -T flat_dt -p 1 -o u-boot.itb                HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw</pre>
+        <p>SHA-256 of each package and of every stage inside it, with the stage sizes
+           the listing reports. (Two of the packages extract a file called
+           <code>u-boot.itb</code>; they are not the same file.)</p>
+        <pre class="cmd">b5e39666e0127bedb59cab921366dc1aa8756b5aa1bb702220a9f4cde265beb7  HFI-SpaceMiT-K3-PicoITX-SysBIOS-1.4.hfifw
+f438d962a3685c606cff57c89097b00c1b316d188e4e08e5591247f63714e6c8  u-boot.itb                <span class="c"># K3, 886649 bytes</span>
+
+ca8836ec2aadabe719b45f27332ae08bb11e199dbf0e19b3250f267ed75e9dd9  HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw
+b9c33d57565b1cf692c8d98c70b68ac9449cf18d0c2c99979a8ec4f2a8e900fe  u-boot-spl.bin            <span class="c"># Unmatched, 94195 bytes</span>
+9f3fe2203f0287e28ef3d39494bea32a74f5a5f96ef9384386f1d4950b0d5972  u-boot.itb                <span class="c"># Unmatched, 943685 bytes</span>
+
+abc3347868f4840423e295d96803094b8aedb8f240e56f8aa812492aac6005ce  HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw
+40478fa89e2392b7ed79803619485be47bd24fcdb9e5ddeb0e8de4492762dae8  u-boot-spl.bin.normal.out <span class="c"># VisionFive 2, 149385 bytes</span>
+e7671850fcdd3f5c43e5a5440fc96661cfa596ff855941085b8e3e17c0764636  u-boot.itb                <span class="c"># VisionFive 2, 1205849 bytes</span></pre>
+
         <p>The packages live at <a href="https://github.com/qsoe-dev/hfi-bios">github.com/qsoe-dev/hfi-bios</a>,
            one directory per release. To build from source:</p>
         <pre class="cmd">git clone https://gitlab.com/bios-riscv/hfi-bios
