@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFI BIOS 1.4 — release notes · QSOE Systems</title>
+  <meta name="description" content="HFI BIOS 1.4: a fourth board, the StarFive VisionFive 2, and a text console painted by a processor no operating system can use — the JH7110's S7 monitor core.">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* ---- release-notes page, expressed in the shared tokens ---- */
+
+    .panels .panel + .panel { margin-top: 1.5rem; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      margin: 0 0 0.4rem;
+    }
+    .panel h2.rel {
+      font-size: clamp(1.9rem, 5vw, 2.4rem);
+      line-height: 1.15;
+      margin: 0 0 0.3rem;
+    }
+    .relmeta {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--accent-deep);
+      margin: 0 0 1.4rem !important;
+      opacity: 0.9;
+    }
+
+    /* component-set table */
+    .vtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.4rem 0 0.4rem;
+    }
+    .vtable th, .vtable td {
+      text-align: left;
+      padding: 0.42rem 0.7rem 0.42rem 0;
+      border-bottom: 1px solid rgba(14, 124, 147, 0.16);
+      color: var(--ink-soft);
+    }
+    .vtable th {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      font-weight: 500;
+    }
+    .vtable td.v { font-family: var(--font-mono); white-space: nowrap; }
+    .vtable td.now { color: var(--ink); font-weight: 500; }
+    .vtable .what { color: var(--ink); }
+
+    /* table of contents */
+    .toc {
+      list-style: none;
+      margin: 0.6rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+    }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* a highlight: bold lead-in, then prose */
+    .hl { margin: 0 0 1.15rem; color: var(--ink-soft); }
+    .hl b { color: var(--ink); }
+    .hl:last-child { margin-bottom: 0; }
+
+    ul.tidy li p { margin: 0.25rem 0 0; }
+    ul.tidy ul.tidy { margin-left: 1rem; }
+
+    .note {
+      margin: 1.2rem 0 0;
+      padding: 0.7rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      border-radius: 0 8px 8px 0;
+      color: var(--ink) !important;
+      font-size: 0.94rem;
+    }
+
+    pre.cmd {
+      margin: 0.5rem 0 1rem;
+      padding: 0.75rem 0.95rem;
+      background: var(--code-bg);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--ink);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    pre.cmd .c { color: var(--accent-deep); }
+
+    /* the serial log, quoted as evidence */
+    pre.log {
+      margin: 0.6rem 0 1.1rem;
+      padding: 0.75rem 0.95rem;
+      background: #102841;
+      color: #d3e0ee;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    pre.log .ok  { color: #54cd82; }
+    pre.log .dim { color: #7f93b4; }
+
+    .panel h3:first-of-type { margin-top: 1.4rem; }
+
+    /* ---- collapsible sections, same idiom as the front page ---- */
+    .folds { margin-top: 1.4rem; }
+    .fold { border-top: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold:last-child { border-bottom: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold > summary {
+      list-style: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      padding: 0.95rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      user-select: none;
+    }
+    .fold > summary::-webkit-details-marker { display: none; }
+    .fold > summary::before {
+      content: "\25B8";
+      color: var(--accent);
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+    .fold[open] > summary::before { transform: rotate(90deg); }
+    .fold[open] > summary { color: var(--ink); }
+    .fold > summary:hover { color: var(--accent); }
+    .fold-body { padding: 0 0 1.05rem 1.45rem; }
+    .fold-body p { margin: 0 0 1rem; color: var(--ink-soft); }
+    .fold-body p.lead { color: var(--ink); }
+    .fold-body ul.tidy { margin: 0.4rem 0 1rem; }
+    .fold-body h3:first-of-type { margin-top: 0.6rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .fold > summary::before { transition: none; }
+    }
+  </style>
+</head>
+<body class="subpage">
+  <div class="sky-cloud c1" aria-hidden="true"></div>
+  <div class="sky-cloud c2" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="site-head">
+      <a href="../index.html"><img class="emblem" src="../emblem.svg" alt="" aria-hidden="true"></a>
+      <h1 class="site-title"><a href="../index.html">QSOE&nbsp;Systems</a></h1>
+      <nav class="tabs">
+        <a class="tab" href="../index.html#qsoe">QSOE OS</a>
+        <a class="tab" href="index.html">HFI</a>
+        <a class="tab" href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="panels">
+
+      <!-- ================= OVERVIEW ================= -->
+      <section class="panel">
+        <p class="eyebrow">Release notes</p>
+        <h2 class="rel">HFI&nbsp;BIOS&nbsp;1.4</h2>
+        <p class="lead">A fourth board, and a processor nobody was using.</p>
+        <p class="relmeta">September 2026 · succeeds 1.3 (August 2026) · GPL-2.0-or-later</p>
+
+        <p>The StarFive VisionFive&nbsp;2 boots HFI&nbsp;BIOS on real silicon, lights an HDMI panel
+           from the SoC's own display controller, and hands a bootloader — and then an operating
+           system — a text console they can repaint for themselves. What repaints it is the JH7110's
+           <strong>S7 monitor core</strong>: a hart with no supervisor mode, marked
+           <code>status = "disabled"</code> in every device tree in its family, which no operating
+           system will ever schedule, and which firmware used to abandon inside an SPL image it had
+           already dissolved.</p>
+
+        <p>That the display needed a character generator was known from the K3, whose VideoBIOS
+           module borrows an application hart for the job. What was new here is that the standard way
+           to get a processor could not be used at all: SBI's hart-state extension starts a hart at
+           the <em>caller's</em> privilege, so a core without supervisor mode cannot be started through
+           it — the request is not refused, it is unaskable. The answer was to stop asking. The SPL
+           hands that hart a permanent home before firmware disappears, and the VideoBIOS module
+           adopts it afterwards.</p>
+
+        <!-- Photograph slot: a VisionFive 2 with mr-bml or QSOE on the panel. -->
+
+        <h3>The component set</h3>
+        <table class="vtable">
+          <thead>
+            <tr><th>Component</th><th>What it is</th><th>1.3</th><th>1.4</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what">HFI&nbsp;BIOS</td>
+                <td>the firmware layer over U-Boot: POST, Set-Up, menus, console, the module loader</td>
+                <td class="v">1.3</td><td class="v now">1.4</td></tr>
+            <tr><td class="what"><code>vf2-videobios</code></td>
+                <td>StarFive JH7110 — DC8200 + Innosilicon HDMI; the generator on the S7</td>
+                <td class="v">—</td><td class="v now">0.2</td></tr>
+            <tr><td class="what"><code>k3-videobios</code></td>
+                <td>SpaceMiT K3 — the SoC display over DisplayPort; the generator on a borrowed hart</td>
+                <td class="v">0.6</td><td class="v now">0.7</td></tr>
+            <tr><td class="what"><code>gk208-videobios</code></td>
+                <td>NVIDIA GK208 over PCIe, for the HiFive Unmatched; the generator on the card</td>
+                <td class="v">0.17</td><td class="v now">0.18</td></tr>
+            <tr><td class="what"><code>virtio-gpu-videobios</code></td>
+                <td>QEMU <code>virt</code> + virtio-gpu, the hardware-free platform</td>
+                <td class="v">0.2</td><td class="v now">0.2</td></tr>
+            <tr><td class="what"><code>libhfivbios</code></td>
+                <td>the runtime every module shares: relocation, font, text mode, the character generator</td>
+                <td class="v">—</td><td class="v now">0.3</td></tr>
+            <tr><td class="what"><code>mr-bml</code></td>
+                <td>QSOE's bootloader, the reference consumer of the handoff block</td>
+                <td class="v">0.9</td><td class="v now">0.9</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.9rem;">Each VideoBIOS module is a separate repository and a separate blob; the
+           firmware image embeds the one for its board. <code>libhfivbios</code> did not exist at 1.3 — the
+           shared half of every module was factored out of them during this cycle.</p>
+
+        <h3>On this page</h3>
+        <ul class="toc">
+          <li><a href="#highlights">Highlights</a></li>
+          <li><a href="#changes">Full change list</a></li>
+          <li><a href="#gaps">Known gaps</a></li>
+          <li><a href="#get">Getting it</a></li>
+        </ul>
+      </section>
+
+      <!-- ================= HIGHLIGHTS ================= -->
+      <section class="panel" id="highlights">
+        <h2>Highlights</h2>
+        <p class="lead">What makes 1.4 a different firmware to run than 1.3.</p>
+
+        <p class="hl"><b>A fourth board.</b> <code>make TARGET=visionfive2</code>, selectable in Set-Up
+           beside the K3, the Unmatched and QEMU, with its own U-Boot patch series and file manifest.
+           The display is the DC8200 through an Innosilicon HDMI&nbsp;2.0 transmitter, driven by the
+           <code>vf2-videobios</code> module: EDID read over the transmitter's own DDC master, the
+           sink's preferred timing programmed, and no firmware blob anywhere in the path. Verified on
+           a v1.3B at the sink's native 1280×1024 and at 1920×1080.</p>
+
+        <p class="hl"><b>A character generator on a core no operating system can use.</b> The JH7110's
+           S7 has no MMU, no supervisor mode and no data cache; it is the core the boot ROM starts, and
+           until now the SPL ran on it, lost the boot lottery, and left it spinning inside an image
+           about to be handed back to the cache. Now the SPL parks it on a mailbox in the S7's own
+           8&nbsp;KiB of tightly coupled RAM — memory that belongs to no operating system, appears in
+           no memory node, and needs no reservation from anybody. The VideoBIOS module adopts that hart
+           in machine mode, with no SBI beneath it, and leaves it waiting on the handoff block's
+           doorbell. A consumer writes cells, fences, stores one word, and a processor that belongs to
+           nobody else turns them into pixels.</p>
+
+        <p class="hl"><b>It survives into the operating system.</b> The point of publishing a handoff
+           block was always that an OS which understands it gets a text console with no display driver
+           at all. 1.4 is the first release where that is demonstrated rather than described: QSOE's
+           <code>devc-hficon</code> rings the doorbell after ExitBootServices, the S7 answers, and both
+           QSOE variants have a monitor-and-keyboard console on the VisionFive&nbsp;2 without a line of
+           display code in the OS. The bootloader asks the firmware to keep the controller alive and
+           withholds the processor from the device tree the OS receives — in that order, and never the
+           second without the first.</p>
+
+        <p class="hl"><b>Two facts measured, not assumed.</b> The S7 executes from DRAM at whatever address
+           the firmware relocated the module to; and the JH7110's core complex is coherent from the S7
+           to a U74 <em>including a line the U74 left dirty in its L1</em> — four tokens out of four,
+           read with no cache maintenance at all. So a consumer owes nothing before ringing the doorbell
+           but a fence. The new <code>spare</code> command in the System Console is the instrument that
+           answered both questions, and it stays in the firmware for the next board.</p>
+
+        <p class="hl"><b>The mechanism is generic.</b> <code>CONFIG_SPL_RISCV_SPARE_HART</code> describes a
+           shape the whole SiFive-derived family shares — the FU740's S7, the FU540's E51 — and it
+           guards itself: the SPL will not stand down unless a hart the device tree actually endorses is
+           available to take the boot. The VideoBIOS runtime gained a second hart provider beside SBI
+           HSM, chosen at build time, so a module says <code>CHARGEN_HART := parked</code> and nothing
+           else in it has to know which world it lives in.</p>
+
+        <p class="hl"><b>Damage is the host's to report.</b> A firmware console that named "something
+           changed" and got "repaint everything" back was free where the repaint is one store — a
+           GPFIFO kick, a doorbell to a hart — and ruinous where the module rasterizes on the calling
+           CPU: a full screen of glyphs plus an 8&nbsp;MB writeback per character, and a menu that took
+           49&nbsp;seconds to appear. The host now names the cells it touched, and a keystroke costs a
+           character.</p>
+
+        <p class="hl"><b>The whole machine, again.</b> Ethernet brought to a negotiated link by firmware and
+           handed over still running, with the link state written into the device tree the OS receives;
+           the SoC temperature sensor on the PC Health Status page; the Flash Utility taught this board's
+           NOR — two images with the environment between them and no partition table anywhere on the
+           device; and a way to run a build over the serial cable alone that writes nothing to the
+           machine, which is both the bring-up path and the recovery path.</p>
+
+        <p class="hl"><b>Two point releases folded in.</b> 1.3.1 found the M.2 slot's NVMe drive, invisible to
+           firmware and OS alike: its PCIe port was being configured as an <em>endpoint</em> rather than
+           a root complex — the vendor's own header comments the mode bit the wrong way round — and the
+           fault hid behind three working ports only because port&nbsp;A alone implements that bit.
+           1.3.2 fixed the machine resetting instead of booting whenever the Ethernet controller was
+           enabled — U-Boot kept a watchdog's servicing schedule inside memory that ExitBootServices
+           freed, and the next pass through that schedule called through whatever had been allocated
+           over it. That one is generic U-Boot, and was submitted upstream.</p>
+      </section>
+
+      <!-- ================= FULL CHANGE LIST ================= -->
+      <section class="panel" id="changes">
+        <h2>The full change list</h2>
+        <p class="lead">Everything that changed since 1.3, by area. Open the parts you want —
+           <a href="#" id="expand-all">Open every section</a> · the same ground is covered in
+           <code>CHANGELOG.md</code> in the
+           <a href="https://gitlab.com/bios-riscv/hfi-bios">source repository</a>.</p>
+        <div class="folds">
+
+          <details class="fold" id="vf2">
+            <summary>The VisionFive 2 port</summary>
+            <div class="fold-body">
+              <p class="lead">A JH7110 board, brought from nothing to a whole machine.</p>
+              <ul class="tidy">
+                <li><strong>Target and build.</strong> <code>TARGET=visionfive2</code> with its own U-Boot
+                    patch series and file manifest; the build refuses a VideoBIOS module belonging to a
+                    different target rather than embedding it and failing on the glass.</li>
+                <li><strong>Display.</strong> DC8200 modeset, the Innosilicon HDMI PHY (pre- and post-PLL,
+                    LDO, serializer, TMDS drivers), EDID over the transmitter's DDC master, the sink's
+                    preferred timing. The VOUT power island, clocks, resets and the DDC pad mux, in the
+                    order the hardware requires.</li>
+                <li><strong>The console.</strong> The text grid and Controller Handoff Block, with damage
+                    reporting so a keystroke costs a character and not a screen.</li>
+                <li><strong>Storage, USB, sensors.</strong> NVMe in the M.2 slot, a second USB pass so the
+                    keyboard is found, the SoC temperature sensor with the clocks it needs registered so it
+                    can be read at all.</li>
+                <li><strong>Ethernet.</strong> The JH7110 PHY is woken <em>before</em> the MAC reset — resetting
+                    the MAC while the PHY still slept left the link down after a cold start and reliably up
+                    after a warm one, which is the tell of an ordering fault. The link is negotiated by
+                    firmware and handed over live.</li>
+                <li><strong>A device tree of our own.</strong> Upstream U-Boot's control FDT for this board has
+                    no display subsystem in it; the image now carries a full board DTB and installs it at
+                    hand-off, so an OS is not handed a tree that cannot drive the panel the firmware just
+                    lit.</li>
+                <li><strong>The Flash Utility.</strong> Two images in SPI NOR — SPL at 0 and the FIT at
+                    0x100000 — with the environment between them and no GPT anywhere. The packaged SPL is
+                    the one the boot ROM will actually take: the header-carrying image, not the raw
+                    binary, which bricks a NOR boot with "Main section boot fail".</li>
+                <li><strong>Booting over the serial cable alone.</strong> <code>scripts/vf2-uart-boot.sh</code>
+                    sends the SPL by XMODEM and the FIT by YMODEM, waits for the ROM's poll to go clean
+                    before speaking (the ROM's second greeting lands exactly where an ACK belongs, and the
+                    result is indistinguishable from a bad cable), and writes nothing to the board. SD and
+                    eMMC boot are gone from upstream for this SoC, so this is the recovery path.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="s7">
+            <summary>The character generator on the S7</summary>
+            <div class="fold-body">
+              <p class="lead">A processor the machine was not otherwise using, and how it was had.</p>
+              <ul class="tidy">
+                <li><strong>The SPL parks it.</strong> <code>CONFIG_SPL_RISCV_SPARE_HART</code>: before entering
+                    OpenSBI — the last moment the SPL still controls the machine — a small machine-mode stub
+                    is copied into memory that outlives firmware and the spare hart is sent there, parked on
+                    a mailbox. On the JH7110 that memory is the S7's own DTIM at <code>0x0110_0000</code>.
+                    The spare is the hart the SPL is standing on, so it names no boot-hart preference, sends
+                    the U74s into OpenSBI, and walks into the stub itself. It refuses to stand down unless a
+                    device-tree-endorsed hart is available to take the boot.</li>
+                <li><strong>The stub is careful.</strong> <code>lla</code> and never <code>la</code>: U-Boot is
+                    built with a global offset table, and <code>la</code> resolves through it — a load from
+                    the very image this hart must stop depending on. It finds its area from its own program
+                    counter rather than from an argument register, so the area is still findable after a call
+                    returns. It records which harts reached the SPL at all, and each one's <code>misa</code> —
+                    the only place a monitor core's missing supervisor mode is visible.</li>
+                <li><strong>The module adopts it.</strong> <code>libhfivbios</code> gained <code>CHARGEN_HART</code>:
+                    <code>sbi</code> asks firmware for an idle hart, in supervisor mode, and goes on calling SBI
+                    for its timer; <code>parked</code> adopts one an earlier stage left waiting, in machine
+                    mode, with the memory-mapped CLINT as its clock. Chosen at build time, for the same reason
+                    the wait strategy is — a blob carries one strategy, not two.</li>
+                <li><strong>Which hart is calling is part of the contract.</strong> The generator runs in machine
+                    mode and may read the CLINT; the firmware that dispatched it runs in supervisor mode, where
+                    OpenSBI PMP-protects the CLINT precisely so supervisor code cannot bypass the SBI timer.
+                    Giving the whole provider one clock put a machine-mode device read on the supervisor-mode
+                    hart and reset-looped a board. The split is by privilege, not by provider.</li>
+                <li><strong>Retiring is a <code>return</code>.</strong> A hart with no supervisor mode has no
+                    HART_STOP to call. The loop returns, the park stub takes its <code>ret</code>, clears the
+                    mailbox entry, and the hart is back on its mailbox — which is how an OS gives it back
+                    through <code>retire_pa</code>, and how the firmware retires it at ExitBootServices.</li>
+                <li><strong>The blob is built for both cores.</strong> Everything in the module may run on the
+                    S7, which has no FPU, so it is compiled for the intersection of the two
+                    (<code>rv64imac_zicsr_zifencei_zba_zbb</code>, <code>lp64</code>) rather than the U74's
+                    <code>rv64gc</code>. A floating-point instruction emitted for something as ordinary as a
+                    struct copy would be an illegal instruction with no handler. The build fails if one
+                    ever appears.</li>
+                <li><strong>A hart that will not answer is recorded as <em>stuck</em>,</strong> not left
+                    <em>active</em>: those are two different facts. Not active means publish no doorbell and
+                    render inline; stuck means the module's memory must never be released. Conflating them
+                    was a frozen console rather than a slow one.</li>
+                <li><strong><code>spare status</code> and <code>spare probe</code>.</strong> Whether a hart is
+                    parked, whether its beat advances, what the SPL saw on its way out — and a routine run on
+                    the hart itself that answers whether it observes a write another hart left dirty in its
+                    cache. Four rounds, four tokens, no flush: it does.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="chb">
+            <summary>The handoff block and the operating system</summary>
+            <div class="fold-body">
+              <p class="lead">What a consumer is told, and what it can rely on.</p>
+              <ul class="tidy">
+                <li><strong><code>FIRMWARE_ONLY</code>, a fourth doorbell kind.</strong> "Only the producer's
+                    CPU can turn a cell into a pixel." It is not <code>NONE</code>, and a consumer that reads it
+                    as <code>NONE</code> loses the display: mr-bml did, on a v1.3B, silencing the firmware
+                    console to write a menu into cells nobody would rasterize. The rule for a consumer is
+                    that an unrecognized kind reads as <code>FIRMWARE_ONLY</code>, never as
+                    <code>NONE</code>.</li>
+                <li><strong><code>present_rect()</code></strong> in the VideoBIOS module ABI: the host names the
+                    cells it touched and the module rasterizes exactly those. A module must not narrow the
+                    rectangle by diffing the grid — the host also writes pixels straight into the framebuffer,
+                    under cells it marks transparent, and a diff cannot see them. Re-blitting an emblem
+                    changed no cell, so nothing was flushed, and half of it stayed in the cache: a torn logo
+                    on the glass.</li>
+                <li><strong>A retired processor is no longer advertised.</strong> When a module gave its hart back
+                    at ExitBootServices it withdrew the doorbell — from the loader's temporary copy of the
+                    block, not the one the OS reads, which went on naming a doorbell for a processor that had
+                    gone home. The firmware owns the published copy, so the firmware now withdraws it, only
+                    after the module confirms it let go. This fixes the same latent fault on the K3.</li>
+                <li><strong>"Reserve video memory" in Set-Up.</strong> Whether the OS is told which memory the
+                    controller owns — cell array, palette, control block, doorbell, module image — as
+                    <code>/reserved-memory</code>. It was a bare environment variable reachable only by
+                    <code>setenv</code>; it is now a row under Advanced Settings, and the refusal at hand-off
+                    names it. Default Disabled: those nodes cost an OS that has never heard of us a few
+                    megabytes and buy it nothing.</li>
+                <li><strong>Keeping the controller alive across the hand-off</strong> is requested by the
+                    bootloader — mr-bml's <code>hfi_vidctrl_persist=1</code> — and honored only when that
+                    memory was reserved. The bootloader withholds the controller's harts from the OS's device
+                    tree first and asks the firmware second, and never the second if the first fails. That
+                    ordering is why a Set-Up row for the request itself was built and then deliberately
+                    removed: firmware cannot do the first half, and a switch whose safety depends on which
+                    board it is on is worse than no switch.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="setup">
+            <summary>Set-Up and the console</summary>
+            <div class="fold-body">
+              <ul class="tidy">
+                <li><strong>Advanced Settings sizes itself to its own help text.</strong> A fixed width clipped a
+                    description to "…which memory the video controller ow", and the person reading that is
+                    the one person who cannot know what was cut off. The page now measures its longest help
+                    line and opens far enough for it.</li>
+                <li><strong>The text grid's cell size comes from the controller</strong> that was just
+                    programmed, not from a constant — which was only correct while every board used the same
+                    font.</li>
+                <li><strong>A console device is never held across a command.</strong> Resetting USB frees the
+                    keyboard's stdio device; code that kept a pointer to it was still holding one afterwards,
+                    and crashed the firmware at address zero.</li>
+                <li><strong>U.S. English</strong> throughout the source, comments and documentation.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="fixed">
+            <summary>Fixed — including 1.3.1 and 1.3.2</summary>
+            <div class="fold-body">
+              <p class="lead">The two point releases, and what was found on the way to 1.4.</p>
+              <h3>1.3.1 — the NVMe drive that hid behind three working ports</h3>
+              <ul class="tidy">
+                <li>The K3's M.2 slot enumerated no drive — not in the BIOS, not in <code>lspci</code> under
+                    Linux — while the other three PCIe ports worked. Port&nbsp;A was being configured as an
+                    endpoint: bit&nbsp;31 of its command register selects the role, the vendor's header
+                    comments it <code>0: EP, 1: RC</code>, and on this part it is the comment that is
+                    inverted. An endpoint waits to be handed link and lane numbers rather than handing them
+                    out, so training fell back to Detect forever. Only port&nbsp;A implements that bit, which
+                    is why the other three never noticed. And because Linux's own driver never writes it on
+                    this SoC, an endpoint left behind by firmware was inherited by the OS — one line in a
+                    bootloader took a disk away from the operating system as well.</li>
+              </ul>
+              <h3>1.3.2 — the machine reset instead of booting, whenever Ethernet was enabled</h3>
+              <ul class="tidy">
+                <li>U-Boot keeps a watchdog's servicing schedule inside the watchdog device's own private
+                    data, and nothing takes that entry off the schedule — while ExitBootServices removes every
+                    active device and frees exactly that memory. The next pass through the schedule called
+                    through whatever had since been allocated over it. Enabling Ethernet put one more device
+                    into the teardown, and that was enough to change what landed on the freed block. The
+                    watchdog is now taken off the schedule before its memory goes. Generic U-Boot, and
+                    submitted upstream.</li>
+                <li>Why one payload booted and another did not: nothing in the failure depended on the
+                    payload's code, only on the order and size of the allocations each boot happened to make.
+                    A kernel loaded one way survived what a kernel loaded another way did not.</li>
+                <li>Why a crash this loud presented as a silent reset: the firmware printed a complete exception
+                    dump — and to the monitor, an instant before the reset cleared it, because a payload that
+                    drives the display hands the console back just before launching the OS. The dump was never
+                    lost; it was on the glass.</li>
+              </ul>
+              <h3>In 1.4</h3>
+              <ul class="tidy">
+                <li>The JH7110 Ethernet PHY reset out from under itself (see the VisionFive&nbsp;2 section).</li>
+                <li>A console device remembered for longer than it existed (see Set-Up).</li>
+                <li>A retired processor still advertised as able to repaint (see the handoff block).</li>
+                <li>The K3's keyboard poll mode named with a symbol that exists.</li>
+                <li>The two vendored ABI headers brought to the version the block actually reports.</li>
+              </ul>
+            </div>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- ================= KNOWN GAPS ================= -->
+      <section class="panel" id="gaps">
+        <h2>Known gaps</h2>
+        <p class="lead">Stated rather than implied away.</p>
+        <ul class="tidy">
+          <li><strong>The S7 spins.</strong> Its generator waits with a paced poll, not a timer: the first
+              bring-up depended on no CLINT programming, no interrupt enable and no <code>wfi</code> —
+              three things that fail in the same silent way. It burns a core nothing else in the machine
+              can use, so this is a power question, not a feature one. The timer comes next.</li>
+          <li><strong>Every ring repaints the whole screen.</strong> That is the K3's contract too, and on
+              the S7 — no data cache, every pixel a store to the shared L2, then an 8&nbsp;MB writeback —
+              it costs tens of milliseconds. It is asynchronous, the firmware stores and walks away, rings
+              coalesce, and scrolling keeps up with a repeated <code>help</code>; but a damage rectangle in
+              the handoff block would let the hart repaint only what changed, and it is not there yet.</li>
+          <li><strong>Keeping the controller alive needs a bootloader that knows how.</strong> mr-bml does. An
+              operating system started through a boot protocol cannot ask for itself, and the firmware
+              deliberately does not decide which processors an OS may online. A different bootloader has to
+              do what mr-bml does, in the same order.</li>
+          <li><strong>The VisionFive&nbsp;2 boots from NOR or over the serial cable, and nothing else.</strong>
+              Upstream U-Boot dropped the SD and eMMC first-stage path for this SoC; a modern SPL has no
+              MMC in it. The Flash Utility and the UART script are the two ways in.</li>
+          <li><strong>The K3 still runs the vendor's first stage.</strong> Its OpenSBI delegates hart state to
+              coprocessors that the first stage has to load and start, and ours does not. The HFI deliverable
+              on that board is the one image in the <code>uboot</code> partition, and the vendor's stages
+              below it are left exactly as shipped.</li>
+          <li><strong>One diagnostic on the K3 cries wolf.</strong> "PHY reset line 15 will not go high" is
+              printed at probe on every boot and contradicted by the next lines, which negotiate the link. It
+              was true once, during bring-up; the readback now samples a register that does not reflect the
+              pad's level under its final mux. It will be corrected in a point release.</li>
+        </ul>
+      </section>
+
+      <!-- ================= GETTING IT ================= -->
+      <section class="panel" id="get">
+        <h2>Getting it</h2>
+        <p>One firmware package per board, written with the BIOS Flash Utility from Set-Up — or, on a
+           board already running Linux, by the board's own means. Each is a FIT carrying every stage the
+           board's flash takes, and the Flash Utility refuses one built for a different board.</p>
+        <ul class="tidy">
+          <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw"><code>HFI-StarFive-VisionFive2-SysBIOS-1.4.hfifw</code></a>
+              — StarFive VisionFive&nbsp;2 (v1.3B): SPL and FIT for the SPI NOR.</li>
+          <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-SpaceMiT-K3-PicoITX-SysBIOS-1.4.hfifw"><code>HFI-SpaceMiT-K3-PicoITX-SysBIOS-1.4.hfifw</code></a>
+              — SpacemiT K3 Pico-ITX: the FIT for the <code>uboot</code> NOR partition. The vendor's first
+              stage and OpenSBI stay as shipped.</li>
+          <li><a href="https://github.com/qsoe-dev/hfi-bios/raw/main/dl/1.4/HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw"><code>HFI-SiFive-Unmatched-SysBIOS-1.4.hfifw</code></a>
+              — SiFive HiFive Unmatched: SPL and FIT, for a NOR laid out with the two loader partitions.</li>
+        </ul>
+        <p>The packages live at <a href="https://github.com/qsoe-dev/hfi-bios">github.com/qsoe-dev/hfi-bios</a>,
+           one directory per release. To build from source:</p>
+        <pre class="cmd">git clone https://gitlab.com/bios-riscv/hfi-bios
+cd hfi-bios
+make TARGET=visionfive2      <span class="c"># or k3, unmatched, qemu -- fetches U-Boot and OpenSBI itself</span>
+make fwpkg TARGET=visionfive2 <span class="c"># the .hfifw for the Flash Utility</span></pre>
+        <p>The VideoBIOS modules are their own repositories under
+           <a href="https://gitlab.com/bios-riscv/videobios">gitlab.com/bios-riscv/videobios</a> — one per
+           display controller, plus <code>libhfivbios</code>, the runtime they share. The build looks for
+           the module beside the firmware tree and embeds it; the two ABI headers a consumer needs,
+           <code>hfi_vidctrl_handoff.h</code> and <code>hfi_vbm.h</code>, are MIT so that any bootloader
+           or operating system can carry them verbatim.</p>
+        <p class="note">Next: the S7's generator moves from a paced poll to a timer, and the handoff
+           block learns to carry a damage rectangle so a hart repaints what changed rather than the
+           screen. Both are performance work on a path that is already correct.</p>
+        <a class="back-link" href="index.html">Back to HFI</a>
+      </section>
+
+    </main>
+
+    <footer>© <span id="year">2026</span> QSOE Systems</footer>
+  </div>
+
+  <script>
+    (function () {
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // a link into a collapsed section must open it, not silently do nothing
+      function openTarget() {
+        var id = (location.hash || '').replace('#', '');
+        if (!id) return;
+        var el = document.getElementById(id);
+        while (el) {
+          if (el.tagName === 'DETAILS') el.open = true;
+          el = el.parentElement;
+        }
+      }
+      window.addEventListener('hashchange', openTarget);
+      openTarget();
+
+      var all = document.getElementById('expand-all');
+      all.addEventListener('click', function (e) {
+        e.preventDefault();
+        var folds = document.querySelectorAll('.fold');
+        var anyClosed = Array.prototype.some.call(folds, function (f) { return !f.open; });
+        Array.prototype.forEach.call(folds, function (f) { f.open = anyClosed; });
+        all.textContent = anyClosed ? 'Close every section' : 'Open every section';
+      });
+    })();
+  </script>
+</body>
+</html>
