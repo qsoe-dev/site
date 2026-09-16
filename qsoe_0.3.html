@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QSOE 0.3 — release notes · QSOE Systems</title>
+  <meta name="description" content="QSOE 0.3 release notes: a writable, checked, persistent root filesystem on both kernels, QSOE/L on every hart of the Unmatched, a third board, a taskman that is the loader, identity that reaches every server, and everything else that changed since 0.2.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---- release-notes page, expressed in the shared tokens ---- */
+
+    .panels .panel + .panel { margin-top: 1.5rem; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      margin: 0 0 0.4rem;
+    }
+    .panel h2.rel {
+      font-size: clamp(1.9rem, 5vw, 2.4rem);
+      line-height: 1.15;
+      margin: 0 0 0.3rem;
+    }
+    .relmeta {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--accent-deep);
+      margin: 0 0 1.4rem !important;
+      opacity: 0.9;
+    }
+
+    /* component-set table */
+    .vtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.4rem 0 0.4rem;
+    }
+    .vtable th, .vtable td {
+      text-align: left;
+      padding: 0.42rem 0.7rem 0.42rem 0;
+      border-bottom: 1px solid rgba(14, 124, 147, 0.16);
+      color: var(--ink-soft);
+    }
+    .vtable th {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      font-weight: 500;
+    }
+    .vtable td.v { font-family: var(--font-mono); white-space: nowrap; }
+    .vtable td.now { color: var(--ink); font-weight: 500; }
+    .vtable .what { color: var(--ink); }
+
+    /* table of contents */
+    .toc {
+      list-style: none;
+      margin: 0.6rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+    }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* a highlight: bold lead-in, then prose */
+    .hl { margin: 0 0 1.15rem; color: var(--ink-soft); }
+    .hl b { color: var(--ink); }
+    .hl:last-child { margin-bottom: 0; }
+
+    /* nested detail under a tidy bullet */
+    ul.tidy li p { margin: 0.25rem 0 0; }
+    ul.tidy ul.tidy { margin-left: 1rem; }
+
+    .note {
+      margin: 1.2rem 0 0;
+      padding: 0.7rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      border-radius: 0 8px 8px 0;
+      color: var(--ink) !important;
+      font-size: 0.94rem;
+    }
+
+    pre.cmd {
+      margin: 0.5rem 0 1rem;
+      padding: 0.75rem 0.95rem;
+      background: var(--code-bg);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--ink);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    pre.cmd .c { color: var(--accent-deep); }
+
+    .panel h3:first-of-type { margin-top: 1.4rem; }
+
+    /* ---- collapsible sections, same idiom as the front page ---- */
+    .folds { margin-top: 1.4rem; }
+    .fold { border-top: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold:last-child { border-bottom: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold > summary {
+      list-style: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      padding: 0.95rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      user-select: none;
+    }
+    .fold > summary::-webkit-details-marker { display: none; }
+    .fold > summary::before {
+      content: "\25B8";
+      color: var(--accent);
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+    .fold[open] > summary::before { transform: rotate(90deg); }
+    .fold[open] > summary { color: var(--ink); }
+    .fold > summary:hover { color: var(--accent); }
+    .fold-body { padding: 0 0 1.05rem 1.45rem; }
+    .fold-body p { margin: 0 0 1rem; color: var(--ink-soft); }
+    .fold-body p.lead { color: var(--ink); }
+    .fold-body ul.tidy { margin: 0.4rem 0 1rem; }
+    .fold-body h3:first-of-type { margin-top: 0.6rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .fold > summary::before { transition: none; }
+    }
+  </style>
+</head>
+<body class="subpage">
+  <div class="sky-cloud c1" aria-hidden="true"></div>
+  <div class="sky-cloud c2" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="site-head">
+      <a href="index.html"><img class="emblem" src="emblem.svg" alt="" aria-hidden="true"></a>
+      <h1 class="site-title"><a href="index.html">QSOE&nbsp;Systems</a></h1>
+      <nav class="tabs">
+        <a class="tab" href="index.html">QSOE OS</a>
+        <a class="tab" href="hfi/index.html">HFI</a>
+        <a class="tab" href="index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="panels">
+
+      <!-- ================= OVERVIEW ================= -->
+      <section class="panel">
+        <p class="eyebrow">Release notes</p>
+        <h2 class="rel">QSOE&nbsp;0.3</h2>
+        <p class="lead">A disk you can write to, check, and keep &mdash; and QSOE/L running on every
+           hart it was given.</p>
+        <p class="relmeta">September 2026 · succeeds 0.2 (September 2026) · Apache-2.0</p>
+
+        <p>0.2 gave you somewhere to write a file; 0.3 gives you somewhere to keep it. The
+           <code>qrvfs</code> root on the NVMe is read-write on both kernels, a checker looks it
+           over before every mount and repairs what a lost power supply leaves behind, and a stress
+           that fills it to the last block and reads every byte back passes on the boards. Around
+           that: a taskman that is the program loader and shares one copy of a library's text with
+           every process, identity that reaches every server truthfully, a third board, and
+           <span class="mono">grep</span>, <span class="mono">mv</span>, <span class="mono">cp</span>,
+           <span class="mono">chmod</span>, <span class="mono">man</span> and symbolic links to use
+           it all with.</p>
+
+        <p>The release also found the reason QSOE/L was slow: since the seL4 MCS port, every thread
+           it ever ran had been placed on hart&nbsp;0. One line of policy later, the writable-filesystem
+           stress on the Unmatched went from 731&nbsp;s to 162&nbsp;s, and a directory listing from a
+           second to a tenth of one. Where <span class="mono">QSOE/L</span> still lags
+           <span class="mono">QSOE/N</span> it is said so below rather than implied away.</p>
+
+        <p>And on the last day, two questions a system should be able to answer got their
+           answers: <em>which kernel is this</em> &mdash; named and versioned apart from QSOE itself,
+           in <code>/sys</code> and by <code>uname -k</code> &mdash; and <em>what time is it</em>,
+           which QSOE/L could not say at all and the K3 said wrongly.</p>
+
+        <h3>The component set</h3>
+        <table class="vtable">
+          <thead>
+            <tr><th>Component</th><th>What it is</th><th>0.2</th><th>0.3</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what"><code>nq</code></td>
+                <td>QSOE/N — the Skimmer microkernel and its taskman</td>
+                <td class="v">0.26</td><td class="v now">0.30</td></tr>
+            <tr><td class="what"><code>lq</code></td>
+                <td>QSOE/L — the seL4 taskman and its kernel seam</td>
+                <td class="v">0.22</td><td class="v now">0.26</td></tr>
+            <tr><td class="what"><code>libc</code></td>
+                <td>the shared C library and <code>crt0</code></td>
+                <td class="v">0.15</td><td class="v now">0.19</td></tr>
+            <tr><td class="what"><code>quser</code></td>
+                <td>the shared userspace: shell, drivers, servers, utilities</td>
+                <td class="v">0.14</td><td class="v now">0.18</td></tr>
+            <tr><td class="what"><code>mr-bml</code></td>
+                <td>the bootloader (separate project, shipped alongside)</td>
+                <td class="v">0.9</td><td class="v now">1.0</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.9rem;">The umbrella records the tested set in
+           <code>component.list</code>; <code>make prepare</code> checks out exactly these.</p>
+
+        <h3>On this page</h3>
+        <ul class="toc">
+          <li><a href="#highlights">Highlights</a></li>
+          <li><a href="#changes">Full change list</a></li>
+          <li><a href="#gaps">Known gaps</a></li>
+          <li><a href="#get">Getting it</a></li>
+        </ul>
+      </section>
+
+      <!-- ================= HIGHLIGHTS ================= -->
+      <section class="panel" id="highlights">
+        <h2>Highlights</h2>
+        <p class="lead">Thirteen things that make 0.3 a different system to keep than 0.2.</p>
+
+        <p class="hl"><b>A root filesystem that writes, and survives.</b> <code>qrvfs</code> gained
+           its write path: create, unlink, truncate, append, rename, symbolic links, directories that
+           grow past their direct blocks, <code>chmod</code>/<code>chown</code>. It is write-through
+           &mdash; a <code>write()</code> that returned has reached the driver &mdash; and it keeps its
+           metadata in an order a power cut cannot make inconsistent: data before the pointers that
+           name it, a length published last. <code>fs-qrv</code> mounts <code>/usr</code> read-write
+           on QEMU, the Unmatched, the K3 and the VisionFive&nbsp;2, on both kernels.</p>
+
+        <p class="hl"><b>Checked before it is trusted.</b> <code>fscheck</code> is a real checker
+           &mdash; bitmap against ownership, block pointers against file lengths, link counts against
+           names &mdash; that runs on a device node on the target and on an image file on a
+           development machine, and <code>init</code> runs it before <code>/usr</code> is mounted. A
+           volume shut down cleanly is mounted; one that was not is repaired; one that cannot be is
+           mounted read-only so the system still comes up. Ninety-six power cuts under a filling
+           stress found only the leak-class states the design promises, every one repaired.</p>
+
+        <p class="hl"><b>Filled, emptied, and read back.</b> <code>test_fsstress</code> writes files
+           of every awkward length across block boundaries, appends, grows a directory past its
+           direct blocks, fills the disk to <code>ENOSPC</code> three times over and checks every
+           byte it wrote. 157 checks, on both boards, under both kernels. It is also the instrument
+           that measured the rest of this release.</p>
+
+        <p class="hl"><b>QSOE/L on every hart.</b> Every thread QSOE/L had ever run was on hart&nbsp;0:
+           the MCS port kept seL4's default that a thread runs where its creator does, and the creator
+           is always taskman. taskman now places threads round-robin, the policy Skimmer applies in
+           its kernel, and <code>ps -H</code> reports the hart a thread was made on. On the Unmatched
+           <code>ls -la / /usr</code> went from 1.007&nbsp;s to 0.12&nbsp;s and the filesystem stress
+           from 731&nbsp;s to 162&nbsp;s &mdash; from ten times QSOE/N to a little over two. Nothing in
+           the emulator could show it; the board did, in one <code>ps</code>.</p>
+
+        <p class="hl"><b>Windows: large messages without a third party.</b> On seL4 a message larger
+           than the IPC buffer was copied by taskman, which cannot be a party to a message it is
+           itself waiting on &mdash; reading a program off the disk, it had the filesystem send a
+           block to the driver whose receive then asked taskman to copy. <code>qsoe_conn_window()</code>
+           has taskman map a run of frames into both ends of a connection once, at a program's start;
+           from then on <code>MsgSend</code> writes into the window, the server reads out of it, and
+           taskman is never asked. The filesystem moves whole blocks on both kernels &mdash; on Skimmer
+           the same call is a no-op, because that kernel carries any size inline.</p>
+
+        <p class="hl"><b>taskman is the loader, and a library's text is shared.</b> No binary carries
+           an interpreter any more: taskman walks a program's <code>DT_NEEDED</code> list, places and
+           relocates each library, and starts the program at its entry; the run-time linker is
+           neither built nor shipped. One copy of <code>libc.so</code>'s text backs every process
+           &mdash; on Skimmer through a page-table bit that marks a leaf a space maps but does not own,
+           on seL4 through frames retyped from taskman's own pool that no process's exit can revoke.</p>
+
+        <p class="hl"><b>Identity reaches every server, truthfully.</b> 0.2 let a server ask who was
+           talking; 0.3 made sure the answer was right on every path. On QSOE/N a path-form verb
+           &mdash; unlink, rename, stat, chmod &mdash; goes from the client straight to the owning
+           filesystem, and taskman refuses to relay anything. On QSOE/L, where a client cannot attach
+           without taskman, the relay stays and is minted with the <em>caller's</em> credentials. A
+           directory must be searchable to be crossed, and an ordinary user can no longer remove
+           root's file from a <code>0700</code> directory &mdash; found by the suite, not by anyone
+           shorter.</p>
+
+        <p class="hl"><b>The kernel names a wait that goes on too long.</b> Once a second Skimmer walks
+           taskman's threads and names any that has waited more than five seconds on a party it does
+           not control &mdash; the pid and channel, the reply it is owed. It read the K3's
+           Ctrl-Alt-Del wedge off the console in one boot: taskman's flush-before-reboot had sent
+           <code>_IO_SYNC</code> to the very process that requested the reboot, REPLY-blocked in
+           taskman. The fan-out skips its requester now, on both kernels, and every mounted filesystem
+           is flushed before the machine halts.</p>
+
+        <p class="hl"><b>A third board.</b> The StarFive VisionFive&nbsp;2 (JH7110) boots both
+           kernels: a PLDA PCIe host, DesignWare Ethernet, the on-screen console through HFI. On
+           Skimmer it cost the discovery that the EFI memory map, not the device tree, decides where
+           an image may land; on seL4, that two boards must not share one generated header.</p>
+
+        <p class="hl"><b>What a call costs, measured.</b> <code>/sys/stats</code> counts taskman
+           calls per bucket, and <code>test_bench</code> prints microseconds per primitive &mdash; a
+           round trip, a stat, an open, an <code>mmap</code>, a password lookup &mdash; on whatever
+           machine it runs on. Together they found the two things that made every QSOE/L taskman call
+           cost a millisecond on the FU740 (a timer sweep that walked the process table twice over
+           before every dispatch, and a 2&nbsp;MiB zeroing per 4&nbsp;KiB <code>mmap</code>), and the
+           reason <code>ls -l</code> read <code>/etc/passwd</code> twice per entry &mdash; which
+           <code>getpwuid()</code> now asks taskman instead, from the cache it already keeps to
+           authenticate logins.</p>
+
+        <p class="hl"><b>Which kernel this is.</b> <code>QSOE/L 0.26</code> said which QSOE you had and
+           nothing about which seL4 it ran on; the two are versioned separately and can be loaded
+           separately. <code>/sys/kernelname</code> and <code>/sys/kernelversion</code> now sit beside
+           <code>/sys/osname</code> and <code>/sys/osversion</code>, <code>uname -k</code> and
+           <code>-K</code> print them, and the login banner reads <code>QSOE/L 0.26 (2026-09-16) on
+           seL4 16.0.0-qsoe-lq-0.26, sifive,hifive-unmatched-a00</code>. The kernel's version is the
+           kernel's own answer: Skimmer publishes it in the information page it builds, and on QSOE/N
+           a boot archive older or newer than its kernel now shows as such instead of passing for the
+           same build. A patched seL4 says so in its version: <code>16.0.0-qsoe-lq-0.26</code> is
+           upstream seL4 with this tree's PLIC patches.</p>
+
+        <p class="hl"><b>The clock has a date.</b> seL4 keeps no wall clock, and QSOE/L's
+           <code>CLOCK_REALTIME</code> was the count since boot: every timestamp said 1970 and
+           <code>clock_settime</code> was &ldquo;not implemented&rdquo;. taskman now holds the offset to
+           the epoch and publishes it in the system page every process shares &mdash; one frame, mapped
+           into all of them, rewritten in place when the clock is set &mdash; so a read costs a register
+           and an addition, and a process started before the set sees the new time on its next read. On
+           the K3 the date lives in the platform's management processor, reachable only over SBI, and
+           Skimmer asks it once at boot; the SoC's own counter block, which the tree calls a clock,
+           starts from zero at every reset and never was one. <code>date</code> prints and sets the
+           clock on both kernels.</p>
+
+        <p class="hl"><b>A wired interrupt lands on its thread's hart.</b> seL4 enables a PLIC source
+           on the hart that executes <code>IRQControl_Get</code> &mdash; taskman's, since only the root
+           task holds it &mdash; and nothing on RISC-V moves it afterwards, so every device trap landed
+           on taskman's hart and the interrupt thread was woken across harts, an IPI and a second
+           kernel entry per interrupt. A fourth build-time patch gives the invocation an optional fifth
+           word naming the target core (as ARM's <code>GetTriggerCore</code> does), taskman sends it for
+           the thread it is placing, and <code>test_irqcore</code> proves the trap, the claim and the
+           wake happen on one hart.</p>
+      </section>
+
+      <!-- ================= THE FULL CHANGE LIST ================= -->
+      <section class="panel" id="changes">
+        <h2>The full change list</h2>
+        <p class="lead">Everything that changed since 0.2, by area. Open the parts you want &mdash;
+           or open them all and read it as one document.</p>
+        <div class="folds">
+
+          <details class="fold" id="kernels">
+            <summary>Kernels and IPC</summary>
+            <div class="fold-body">
+          <p class="lead">Skimmer, the seL4 seam, and the message primitives above both.</p>
+          <h3>Skimmer</h3>
+          <ul class="tidy">
+            <li><strong>Liveness.</strong> <code>kernel/liveness.c</code> names, once a second, any
+                taskman thread blocked longer than five seconds in a send, a reply or a sync object,
+                with what it waits on. A wait for work in <code>MsgReceive</code> and a sleep by choice
+                are left alone; so are other processes.</li>
+            <li><strong>A trap says what happened.</strong> A fatal user fault is reported in the
+                vocabulary of the fault, with the registers named correctly; every trapframe offset is
+                now verified by <code>_Static_assert</code> &mdash; 34 of 34, where five had been.</li>
+            <li><strong><code>PTE_SW_SHARED</code>.</strong> One of Sv39's supervisor-software bits
+                marks a leaf an address space maps but does not own; teardown, unmap and protect honor
+                it. It was needed before any sharing: a mapper of a published region freed the
+                <em>owner's</em> pages when it exited.</li>
+            <li><strong>Unlocking a mutex nobody holds is not an error</strong> on either kernel now;
+                QSOE/L had answered <code>EPERM</code> about a mutex nobody owned &mdash; the last
+                failing assertion of the shared suite there.</li>
+            <li><strong>The kernel says which kernel it is</strong>: a new information-page tag carries
+                Skimmer's own version, and taskman publishes it as <code>/sys/kernelversion</code> &mdash;
+                never its own number, so a kernel older than the tag reads as unknown.</li>
+            <li><strong>The kernel asks the platform for the date.</strong> Where the device tree names
+                a clock kept by the platform's management processor (the K3), Skimmer reads it once at
+                boot over SBI's Message Proxy and records it with the <code>time</code> CSR of that
+                instant, as a snapshot <code>rtc</code> advances with no privilege at all. For a
+                memory-mapped clock behind a gate the firmware leaves shut, the page also names the
+                gate.</li>
+          </ul>
+          <h3>QSOE/L</h3>
+          <ul class="tidy">
+            <li><strong>Every thread gets a hart</strong> (above). <code>KernelIRQReporting</code> is
+                off &mdash; spread threads exchange reschedule IPIs the kernel coalesces and then
+                reports as spurious &mdash; and a third build-time patch to the PLIC driver enables a
+                line on one hart only, the one that unmasked it.</li>
+            <li><strong>Windows</strong> (above): <code>TM_REQ_WINDOW_ATTACH</code> / <code>QUERY</code>
+                / <code>DETACH</code>, keyed by the connection badge, fenced on both sides, the server's
+                side kept until the server exits, frames pooled and scrubbed. They carry
+                <code>MsgSendv</code>, <code>MsgReadv</code>/<code>MsgWritev</code>,
+                <code>MsgSavereply</code> and <code>MsgReply</code>; <code>MsgError</code> exists.</li>
+            <li><strong>A client's identity rides in the badge</strong>, above bit&nbsp;31, in a
+                fail-safe layout: a badge lost or never stamped reads as zeroes, and taskman refuses to
+                mint one for an id it cannot represent rather than truncate it into the superuser.</li>
+            <li><strong>Relays carry the caller's credentials</strong> (<code>ConnectAttachAs</code>);
+                a direct-pulse channel waits rather than binds, which is what a lost pulse
+                notification had killed networking with.</li>
+            <li><strong>One call for the whole seam.</strong> Forty-odd sites that each built an seL4
+                message by hand call <code>qsoe_tm_call</code>; the LQ-private opcodes live in one
+                header. The seam moved to <code>libc/api/</code>, as on Skimmer.</li>
+            <li><strong>seL4 pinned to 16.0.0</strong>; the version string comes from
+                <code>git describe</code>, and the kernel's own is
+                <code>16.0.0-qsoe-lq-&lt;version&gt;</code>, stamped from the tree the build compiled and
+                shown as <code>/sys/kernelversion</code>.</li>
+            <li><strong>The target core of a wired interrupt</strong> (above): the fourth build-time
+                patch; <code>TM_REQ_IRQ_ATTACH</code> answers the hart the attaching thread runs on, for
+                a main thread and a worker alike, and <code>sysinfo</code> shows it.</li>
+            <li><strong>The wall clock</strong> (above): taskman holds the epoch offset, sets it on
+                <code>TM_REQ_CLOCK_SETTIME</code> as root's verb, and publishes it in the system page,
+                which is <em>one frame shared by every process</em> now where each child used to get a
+                private copy. The word is two halves under a sequence number: a tag body is never
+                8-aligned, and a misaligned 64-bit read would trap into firmware on every
+                <code>clock_gettime</code> on the FU740.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="memory">
+            <summary>Memory and the loader</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>taskman loads <code>DT_NEEDED</code></strong> on both kernels, each library at
+                <code>0x68000000&nbsp;+&nbsp;n·2&nbsp;MiB</code>, relocated against the scope built so
+                far, the program last. rtld is gone; the relocator is libtaskman's, written once.</li>
+            <li><strong>One copy of a library's text</strong> backs every process: master frames on seL4,
+                the shared PTE bit on Skimmer.</li>
+            <li><strong>Regions carry their granule</strong>, so a 4&nbsp;KiB-granule device region maps
+                as such; a mapper's exit no longer frees the owner's pages.</li>
+            <li><strong>QSOE/L <code>mmap</code> cost</strong>: a recycled megapage is zeroed only as far
+                as the request &mdash; 13&nbsp;ms per 4&nbsp;KiB <code>mmap</code> became half a
+                millisecond under QEMU. CSpace slots come back on detach and on exit; a shell loop no
+                longer exhausts the 4096-slot CNode.</li>
+            <li><strong>QSOE/L worker threads are recycled.</strong> A process could create 31 threads
+                in its life &mdash; the seam's allocator was a bump and taskman freed nothing before
+                exit. A joined or detached thread's slot goes back, and taskman parks the worker's
+                objects for the slot's next occupant.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="process">
+            <summary>Processes, sessions and signals</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>The sync fan-out skips its requester</strong> and sends to each server once; a
+                terminating process's path registrations go with it, so a server started again can
+                take its own name back.</li>
+            <li><strong>A detached daemon can exit and be killed</strong> on QSOE/L. It could not:
+                terminate took &ldquo;detached&rdquo; for &ldquo;already a zombie&rdquo;, skipped the
+                teardown and sent no reply, and the daemon lived on with its signal thread frozen.</li>
+            <li><strong><code>waitpid</code> keeps its word</strong> on QSOE/L &mdash; every form of its
+                first argument, the pid reported; <code>wait4</code> is shared libc.</li>
+            <li><strong><code>cmd &gt; /dev/null</code> writes</strong> on QSOE/N. It answered
+                <code>EROFS</code>: the dup path cloned every OCB kind it did not know as a cpio file.</li>
+            <li><strong><code>posix_spawn</code>'s p form searches PATH</strong> &mdash; it never had, on
+                either kernel; <code>time ls</code> works. <code>setitimer</code> and
+                <code>SIGALRM</code>; <code>TimerCreate</code>/<code>TimerDestroy</code> on QSOE/L.</li>
+            <li><strong>Stubs announce on the program's standard error</strong>, not the kernel debug
+                console a release kernel refuses to user programs.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="fs">
+            <summary>Filesystems and resource managers</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong><code>qrvfs</code> writes</strong>: create, unlink, truncate (rewritten once
+                the first power-cut round found blocks freed before the pointers naming them were
+                written), append, rename, directories past their direct blocks, symbolic links
+                followed with an <code>ELOOP</code> cap, <code>readlink</code>, <code>lstat</code>;
+                <code>st_blocks</code>; search permission checked on every directory a path crosses.</li>
+            <li><strong>Whole blocks to the driver</strong> on both kernels (windows on seL4, inline on
+                Skimmer): five messages per block became one. QEMU, QSOE/N: <code>cp</code>
+                2.7&nbsp;s&nbsp;&rarr;&nbsp;0.7&nbsp;s, the stress 98&nbsp;s&nbsp;&rarr;&nbsp;26&nbsp;s.</li>
+            <li><strong><code>fscheck</code></strong>, on target and host, with <code>-p</code> to
+                repair and <code>-c</code> to check only when the volume was left mounted or the
+                mount count says so; <code>init</code> runs it before the mount.</li>
+            <li><strong>A volume carries a label.</strong> <code>mkfs-qrv -L</code>,
+                <code>qrvlabel</code>; <code>mount</code>, <code>fscheck</code>, <code>statvfs</code>
+                and <code>/sys/mounts</code> report it. The release image is <code>qsoe-usr</code>.</li>
+            <li><strong><code>sync()</code>, <code>fsync()</code>, <code>fdatasync()</code></strong>;
+                every server answers an <code>_IO_SYNC</code>, one flush per disk, and the flush runs
+                before halt and reboot.</li>
+            <li><strong><code>_IO_SETATTR</code> and <code>_IO_NOTIFY</code></strong> in the framework:
+                <code>chmod</code>/<code>chown</code>/<code>truncate</code> reach a filesystem, and
+                <code>poll()</code> is real &mdash; pipes, serial lines and the resource-server
+                framework notify; the video console tells a poll the same truth a read does.</li>
+            <li><strong><code>fs-tmpfs</code> shrinks a file</strong> (a partial truncate returned
+                <code>EINVAL</code>) and honors <code>chown</code> and <code>utimes</code>.</li>
+            <li><strong>readdir while unlinking</strong> no longer skips every other name (<code>rm -r</code>
+                had left half a tree). A Provider with no <code>readlink</code> answers
+                <code>EINVAL</code> silently, which is what an lstat probe expects.</li>
+            <li><strong>The framework accepts a request of up to 64&nbsp;KiB</strong> when a Provider
+                declares <code>QSOE_PROV_BULK_PUSH</code>; a resource manager's <code>msglen</code> is
+                what landed in its buffer, not what the sender said.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="drivers">
+            <summary>Drivers and hardware</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>The VisionFive&nbsp;2</strong> on both kernels: <code>LOAD_PA</code> at
+                <code>0x48000000</code> because the EFI memory map, not the device tree, is the account
+                that matters; a PLDA XpressRICH PCIe host in <code>pci-server</code>; DesignWare
+                Ethernet through <code>devn-dwmac</code>; the on-screen console; <code>PLAT_VF2</code>
+                selecting seL4's own star64 platform with no new patch.</li>
+            <li><strong>The block drivers gained a write path</strong>: <code>devb-nvme</code> and
+                <code>devb-virtio</code> write, flush on <code>_IO_SYNC</code>, and declare bulk push.</li>
+            <li><strong>QSOE/L's on-screen console on the Unmatched</strong>: the firmware-window
+                overlay is enabled for the board kernel, and <code>devmap_carve</code> keeps a bounded
+                window of frames below a request instead of discarding hundreds of megabytes of a
+                gigabyte-wide PCI window, so the console no longer costs the NVMe root.</li>
+            <li><strong><code>libserdev</code></strong>: the serial drivers share a library, and every
+                library moved under <code>lib/</code>. The erase sequences the video console
+                swallowed are drawn. USB keyboard interrupt attachments are per process and dropped
+                at exit.</li>
+            <li><strong>The HFI handoff block may say only the firmware can repaint</strong>; the
+                kernel's video-controller handoff is found by the kernel.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="net">
+            <summary>Networking &mdash; QSP</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>A station serves files</strong>: <code>CONNECT</code>, <code>READ</code>,
+                <code>FSTAT</code>, <code>READDIR</code> under <code>/net/&lt;station&gt;</code>,
+                read-only, scoped; <code>qfetch</code> works against it. A path-form
+                <code>stat</code> below a station answers.</li>
+            <li><strong>The relay stops narrating itself at INFO</strong>; a lost pulse notification no
+                longer kills QSOE/L networking (a direct-pulse channel waits).</li>
+            <li><strong>The relay's identity is not yet the originating client's</strong> &mdash;
+                carried, not enforced; see the gaps.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="libc">
+            <summary>The C library</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>Regular expressions</strong> (<code>&lt;regex.h&gt;</code>, TRE, with
+                <code>REG_STARTEND</code>), <code>getopt_long</code>, <code>&lt;assert.h&gt;</code>,
+                <code>setlocale</code> (one locale, <code>C.UTF-8</code>), <code>getprogname</code>,
+                <code>mblen</code>, <code>setlinebuf</code>, <code>tcgetwinsize</code>/<code>tcsetwinsize</code>.</li>
+            <li><strong><code>pread</code>, <code>realpath</code>, <code>rename</code>,
+                <code>fsync</code>/<code>fdatasync</code>/<code>sync</code>, <code>wait4</code>,
+                <code>setitimer</code>, <code>mprotect</code></strong>; five more POSIX entry points
+                moved into the shared body from the seams.</li>
+            <li><strong><code>getpwuid</code>, <code>getpwnam</code>, <code>getgrgid</code>,
+                <code>getgrnam</code> ask taskman</strong> (<code>TM_REQ_ACCOUNT_QUERY</code>) instead
+                of walking the files; the hash never travels.</li>
+            <li><strong><code>poll()</code> stops guessing</strong>: <code>_IO_NOTIFY</code> and a pulse
+                to the caller. On QSOE/L the timeout is not yet honored.</li>
+            <li><strong>Path-form verbs find their own way</strong> to the owning server on QSOE/N;
+                every path buffer is sized from one number, <code>TM_PATH_MAX</code>, and a
+                <code>_Static_assert</code> tells the two wire-frame families apart, which had been a
+                recurring source of offset bugs.</li>
+            <li><strong><code>qsoe_conn_window()</code></strong>, <code>qsoe_proc_self_info()</code>,
+                <code>qsoe_errprintf()</code>; <code>statvfs</code> carries the volume's label.</li>
+            <li><strong><code>uname()</code> keeps its POSIX shape</strong> and reads
+                <code>/sys/osversion</code>; the kernel pair is not folded into <code>release</code> or
+                <code>version</code>, whose meaning scripts depend on. <code>ClockCycles()</code> exists
+                on QSOE/N &mdash; declared, implemented on QSOE/L, never there, and the first caller found
+                out. The information page gained the kernel version, the wall-clock offset, and a clock
+                record that can name a gate or carry a snapshot.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="shell">
+            <summary>Shell and utilities</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>New:</strong> <code>grep</code>, <code>mv</code>, <code>cp</code>,
+                <code>chmod</code>, <code>ldd</code>, <code>which</code>, <code>man</code> through the
+                pager in <code>PAGER</code>, <code>fscheck</code>, <code>qrvlabel</code>,
+                <code>test_fsstress</code>, <code>test_bench</code>, <code>test_liveness</code>.
+                <code>qview</code> scrolls and wraps and is a symbolic link beside the program it
+                names.</li>
+            <li><strong><code>ps -H</code> shows the hart</strong> a thread runs on; <code>mount</code>
+                shows the label; <code>/sys/stats</code> counts taskman calls per bucket.</li>
+            <li><strong>qsh's <code>time</code></strong> printed &ldquo;1m37.-95s user&rdquo; &mdash; a
+                macro right only at 1000&nbsp;Hz; and <code>/usr/bin/time ls</code> finds
+                <code>ls</code>.</li>
+            <li><strong>New:</strong> <code>date</code> &mdash; the POSIX shape, <code>date [-u]
+                [+format]</code> to print and <code>date mmddHHMM[[cc]yy][.ss]</code> to set the system
+                clock (<code>rtc date</code> stores it into the hardware); <code>uname -k</code> and
+                <code>-K</code>, appended to <code>-a</code> the way GNU carries its own extension last.
+                <code>rtc</code> opens a gated clock before the first access and advances a boot-time
+                snapshot; <code>sysinfo</code> shows the system and the kernel as two lines, and prints
+                a hart or a count the kernel does not report as such, never as a number.</li>
+            <li><strong>The shared suite grew</strong> from 286 to 502 checks (509 on QSOE/N): windows,
+                thread churn, rename, search permission, readdir while unlinking, the filesystem group
+                running both mounts side by side, a <code>[uname]</code> group that holds the OS name to
+                the kernel it implies, and a clock case that steps <code>CLOCK_REALTIME</code> an hour
+                forward and back while <code>CLOCK_MONOTONIC</code> stands still. It is fully green on
+                both kernels, on every board.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="build">
+            <summary>Boot, build and tooling</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>Every image is checked before it boots</strong>: <code>make nvme</code> runs
+                <code>fscheck</code> over the image it lays; <code>make -C boot deploy</code> puts
+                kernels and the partition image on a board through mr-bml.</li>
+            <li><strong>Versions come from <code>git describe</code></strong> in every repository, and a
+                tag that touches nothing no longer leaves the version header stale.</li>
+            <li><strong>The quser build's exit status agrees with its summary line</strong> &mdash; it
+                used to report success with components broken and stage their previous binaries.</li>
+            <li><strong>mr-bml 1.0</strong> and HFI BIOS 1.4.1 (the 1.4 quiesce regression that
+                withdrew the GK208's doorbell on the Unmatched is fixed there). Multiboot3, the boot
+                protocol mr-bml implements, is at version 1.0 too and no longer a draft: every tag is
+                two 64-bit words, the header lives in the ELF note only, and the specification ships
+                with the loader. mr-bml is published as a Debian package rather than a bare EFI binary:
+                the image is assembled on the board, for that board's volume, which a prebuilt one could
+                only get right for one machine.</li>
+            <li><strong><code>test_irqcore</code></strong> says whether a wired interrupt reaches the
+                hart its interrupt thread was pinned to, on the kernel under it, by ringing QEMU virt's
+                goldfish RTC alarm from a pinned worker; <code>-d int</code> names the hart per trap.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="bugs">
+            <summary>Bugs worth naming</summary>
+            <div class="fold-body">
+          <p class="lead">Found in this cycle, each with what it taught.</p>
+          <ul class="tidy">
+            <li><strong>Every QSOE/L thread on one hart.</strong> A default carried through a kernel
+                port, invisible to an emulator, worth a factor of five on a board. Placement is policy,
+                and on seL4 the policy is taskman's to state.</li>
+            <li><strong>A timer sweep before every dispatch that walked the process table through a
+                table-scanning lookup</strong> &mdash; 16k record touches per message, a millisecond
+                per taskman call on the FU740, measured with <code>test_bench</code> and
+                <code>/sys/stats</code> rather than guessed.</li>
+            <li><strong>The Ctrl-Alt-Del wedge</strong> was a send-loop deadlock, not NVMe: the
+                liveness line named it in one boot after a week of theories.</li>
+            <li><strong>A region mapper's exit freed the owner's pages</strong> on Skimmer; nothing
+                failed loudly, the owner's data quietly became whoever got the pages next.</li>
+            <li><strong>Relayed verbs ran as root</strong> on both kernels &mdash; a hole through every
+                filesystem's permission check, closed two different ways.</li>
+            <li><strong>Blocks freed before the pointers naming them were written</strong> in
+                <code>itrunc</code> &mdash; the first power-cut round found it; 96 rounds since found
+                nothing else.</li>
+            <li><strong>Two generated headers shared by two boards</strong>, so the second board built,
+                linked, passed every check and booted the wrong image.</li>
+            <li><strong>The K3 booted to 1970, twice over.</strong> Its counter block is gated by the
+                firmware and read as zeroes &mdash; and zero seconds since the epoch passes every check
+                a clock that was never set would pass. Opened, it counted: from zero, at every reset.
+                It was never the date; the date lives in the management processor, and Linux's own
+                driver comment said so all along.</li>
+            <li><strong><code>ClockCycles()</code> declared but never implemented</strong> on QSOE/N.
+                The loader warned &mdash; <code>reloc skip: NULL slot</code> &mdash; and nothing called
+                it until the snapshot clock did, on the board, and jumped to zero. The emulator never
+                reached that path.</li>
+            <li><strong>A 64-bit word in a page where no body is 8-aligned.</strong> The first
+                wall-clock offset was one 64-bit field in a tag body, which begins four bytes into an
+                eight-byte stride; taskman's own alignment guard refused it, honestly. Two halves under
+                a sequence number instead.</li>
+          </ul>
+            </div>
+          </details>
+        </div>
+        <p style="margin-top:1.4rem; font-size:0.9rem;">
+           <a href="#" id="expand-all">Open every section</a> · the same ground is covered in the
+           per-component <code>CHANGELOG.md</code> files in the
+           <a href="https://gitlab.com/qsoe">source repositories</a>.</p>
+      </section>
+
+      <!-- ================= GAPS ================= -->
+      <section class="panel" id="gaps">
+        <h2>Known gaps</h2>
+        <p class="lead">Stated rather than implied away. These are the things 0.3 does not do, and
+           most of them have a release number against them.</p>
+
+        <ul class="tidy">
+          <li><strong>QSOE/L is still slower than QSOE/N</strong> &mdash; a little over twice on the
+              filesystem stress on the same disk, where it was ten times. What remains is understood
+              and listed: <code>nanosleep</code> on seL4 is a spin on <code>rdtime</code> and a yield,
+              because taskman has no timer of its own to wake a sleeper, so a periodically polling
+              driver is a busy hart; every kernel entry reads a time CSR the U74 traps to firmware;
+              and taskman's dispatch is single-threaded on both kernels.</li>
+          <li><strong>No timed waits on either kernel.</strong> <code>pthread_cond_timedwait</code>,
+              <code>TimerTimeout</code> for a condvar, a bounded <code>InterruptWait</code> &mdash;
+              absent, which is also why a bounded <code>poll()</code> is unbounded on QSOE/L.</li>
+          <li><strong>A client REPLY-blocked on a server that exits parks forever on QSOE/L</strong>;
+              the suite skips the case before sending.</li>
+          <li><strong>taskman serves from one thread.</strong> A worker pool exists on QSOE/N and hung
+              the K3 at boot; it is held back until the cross-hart wake is found.</li>
+          <li><strong>There is no <code>dlopen()</code></strong>, no <code>pwrite()</code>, no libm.
+              The C Library Reference's new appendix compiles SQLite against 0.3 and lists exactly
+              what it finds missing.</li>
+          <li><strong>The console's cell array is published to peer 0</strong>, so any opener of
+              <code>/dev/con1</code> can map it; <code>fs-tmpfs</code> does not check search
+              permission on the path; credentials do not cross the net.</li>
+          <li><strong>A thread spinning in U-mode without ever blocking cannot be killed.</strong> The
+              blocked half of that shipped in 0.2; the spinning half is still the ThreadCancel work
+              package.</li>
+          <li><strong>A clock kept by the platform cannot be set from QSOE yet</strong> (the K3): the
+              date is read once at boot and advanced; writing it back needs a kernel call there is
+              not yet, and <code>rtc date</code> says so.</li>
+          <li><strong>No interrupt fire count on QSOE/L.</strong> seL4 signals the driver's
+              notification itself and keeps no tally; <code>sysinfo</code> shows &ldquo;-&rdquo; rather
+              than a zero that would claim the source never fired. A count in the interrupt thread's
+              own page is on the 0.4 list.</li>
+          <li><strong>The K3 is QSOE/N only</strong> in this release.</li>
+        </ul>
+      </section>
+
+      <!-- ================= GET IT ================= -->
+      <section class="panel" id="get">
+        <h2>Getting it</h2>
+        <p>Pre-built images are published at
+           <a href="https://github.com/qsoe-dev/dl">github.com/qsoe-dev/dl</a>; the
+           <a href="index.html">front page</a> lists what each file is and how to run it under QEMU or
+           install it on a board. To build from source:</p>
+        <pre class="cmd">git clone https://gitlab.com/qsoe/os
+cd os
+make prepare   <span class="c"># fetch the 0.3 component set (see component.list)</span>
+make           <span class="c"># build both variants: QSOE/N, then QSOE/L</span>
+make nvme      <span class="c"># the disk image, checked by fscheck as it is laid</span>
+make dist      <span class="c"># optional: the QEMU disk images</span></pre>
+        <p>The manuals &mdash; <code>Design.pdf</code>, <code>UserGuide.pdf</code>,
+           <code>ProgrammingBook.pdf</code>, <code>AppPortingGuide.pdf</code>,
+           <code>Networking.pdf</code> and <code>LibcReference.pdf</code>, the last now covering
+           0.1&ndash;0.3 with an appendix on what SQLite asks for &mdash; are published alongside each
+           release at <a href="https://github.com/qsoe-dev/doc">github.com/qsoe-dev/doc</a>.
+           Documentation is a release gate: no version ships before the manuals are brought up to
+           the tree.</p>
+        <p class="note">Next is <strong>0.4</strong> &mdash; sound out: the GK208's HDMI audio function
+           brought up as <code>deva-hdmi</code>. Audio is the instrument for every measurement from
+           here to 1.0 &mdash; a dropped buffer is audible long before it is visible &mdash; which is
+           why it comes this early. With it, a real <code>nanosleep</code> on QSOE/L and the timed
+           waits both kernels lack.</p>
+        <a class="back-link" href="index.html">Back to QSOE Systems</a>
+      </section>
+
+    </main>
+
+    <footer>© <span id="year">2026</span> QSOE Systems</footer>
+  </div>
+
+  <script>
+    (function () {
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // a link into a collapsed section must open it, not silently do nothing
+      function openTarget() {
+        var id = (location.hash || '').replace('#', '');
+        if (!id) return;
+        var el = document.getElementById(id);
+        while (el) {
+          if (el.tagName === 'DETAILS') el.open = true;
+          el = el.parentElement;
+        }
+      }
+      window.addEventListener('hashchange', openTarget);
+      openTarget();
+
+      var all = document.getElementById('expand-all');
+      all.addEventListener('click', function (e) {
+        e.preventDefault();
+        var folds = document.querySelectorAll('.fold');
+        var anyClosed = Array.prototype.some.call(folds, function (f) { return !f.open; });
+        Array.prototype.forEach.call(folds, function (f) { f.open = anyClosed; });
+        all.textContent = anyClosed ? 'Close every section' : 'Open every section';
+      });
+    })();
+  </script>
+</body>
+</html>
