@@ -122,20 +122,23 @@
            from scratch for this project (SMP by design); <span class="mono">QSOE/L</span> runs on
            <strong>seL4</strong> as its kernel.</p>
 
-        <p>Both variants, when compiled, offer the kernel and initrd files directly usable in
-           e.g. U-Boot loader. The userspace is <strong>100% identical</strong> across
-           both variants; the only parts produced per-kernel are <code>taskman</code>, the task
-           manager, and <code>libc.so</code> — the C library, which is around 85% shared at the source
-           level and diverges only at the thin layer where it meets the kernel.</p>
+        <p>Each variant is a kernel file and one boot archive, <code>modpkg.cpio</code>, which is the
+           same file for both; QSOE's own boot loader, <strong>mr-bml</strong>, starts either from one
+           menu. The userspace is <strong>100% identical</strong> across both variants, down to
+           <code>libc.so</code>, a single binary; the only parts built per kernel are
+           <code>taskman</code>, the task manager, and <code>libqsoe.so</code>, the library of the
+           native calls &mdash; channels, messages, pulses, threads &mdash; at the thin layer where
+           the system meets the kernel.</p>
 
         <p>The design follows the QNX&nbsp;Neutrino tradition: a small kernel with everything else in
            userspace, synchronous message-passing IPC, and the resource-manager model for services.</p>
 
         <p>QSOE targets 64-bit RISC-V (<code>RV64</code>, <code>Sv39</code>) on the SiFive HiFive
            Unmatched (<code>FU740</code>), the StarFive VisionFive&nbsp;2 (<code>JH7110</code>) and the
-           SpacemiT K3 Pico-ITX, with QEMU used for day-to-day development. Both QSOE variants boot on
-           real hardware; the K3 — RVA23-class, sixteen harts, pure AIA — is QSOE/N only in this
-           release. Released under Apache-2.0.</p>
+           SpacemiT K3 Pico-ITX, with QEMU used for day-to-day development. Both variants boot on every
+           board; on the K3 &mdash; RVA23-class, sixteen harts, pure AIA &mdash; QSOE/L runs on
+           <a href="https://gitlab.com/sel4-frontier/k3sel4">k3sel4</a>, a port of seL4 to the SoC.
+           Released under Apache-2.0.</p>
 
         <div class="meta-row">
           <a href="https://gitlab.com/qsoe/os">gitlab.com/qsoe/os</a>
@@ -149,58 +152,58 @@
               <p>QSOE can be built from source or installed from pre-built binaries. Ready-made
                  images for each release are published at
                  <a href="https://github.com/qsoe-dev/dl">github.com/qsoe-dev/dl</a>
-                 (current release: <strong>0.3</strong>). The files are:</p>
+                 (current release: <strong>0.4</strong>), with a <code>SHA512SUMS</code> file to check
+                 them by. The files are:</p>
               <ul class="tidy dl-list">
-                <li><strong>The Skimmer microkernel</strong> — the kernel of the <strong>QSOE/N</strong>
-                    variant. A raw binary image, loaded by the bootloader (or QEMU) together with the userspace
-                    package below. Skimmer is linked once per board, so take the one for yours:
-                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/skimmer-sifive.bin"><code>skimmer-sifive.bin</code></a> (HiFive
-                    Unmatched), <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/skimmer-k3.bin"><code>skimmer-k3.bin</code></a>
-                    (SpacemiT K3), <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/skimmer-vf2.bin"><code>skimmer-vf2.bin</code></a>
-                    (StarFive VisionFive&nbsp;2), or <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/skimmer-qemu.bin"><code>skimmer-qemu.bin</code></a>
-                    (QEMU <code>virt</code>). What the board decides is the load address; the platform
-                    itself is read from the device tree at run time. So the QEMU and Unmatched images are
-                    byte-for-byte identical — either name gets you the same kernel — while the K3, whose
-                    DRAM starts at 4&nbsp;GiB, and the VisionFive&nbsp;2, whose firmware still holds the
-                    low end of its RAM, are each linked for their own address and their images are their
-                    own. Take one across those lines, in any direction, and the machine loads a kernel
-                    and then does nothing recognizable.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/modpkg.cpio"><code>modpkg.cpio</code></a>
-                    — the module package: the shared QSOE userspace (taskman, <code>init</code>, the C library,
-                    the shell, the file manager, drivers and utilities) as a CPIO archive. One archive for every
-                    board and both variants. <strong>QSOE/N</strong> boots it as an initrd alongside
-                    <code>skimmer-&lt;board&gt;.bin</code>.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/qsoe-l-qemu.elf"><code>qsoe-l-qemu.elf</code></a>
-                    — the <strong>QSOE/L</strong> variant (on the seL4 kernel) as a single, self-contained ELF
-                    for the QEMU <code>virt</code> machine. It bundles the elfloader, the seL4 kernel, taskman and
-                    the userspace together — nothing else is needed to boot.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/qsoe-l-sifive.elf"><code>qsoe-l-sifive.elf</code></a>
-                    and <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/qsoe-l-vf2.elf"><code>qsoe-l-vf2.elf</code></a>
-                    — the same QSOE/L image, built for the SiFive HiFive Unmatched (FU740) and for the
-                    StarFive VisionFive&nbsp;2 (JH7110). There is no K3 equivalent in this release.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/mrbml-efi-riscv64_1.0_riscv64.deb"><code>mrbml-efi-riscv64_1.0_riscv64.deb</code></a>
-                    — <strong>mr-bml</strong>&nbsp;1.0, QSOE's own bootloader (an EFI application for RISC-V),
-                    as a Debian package for the board itself. It can load either variant and drives the boot
-                    menu on real hardware. A package rather than a bare binary because the image has to
-                    know where its configuration lives, which differs per machine: <code>mrbml-install</code>
-                    assembles it on the board, for that board's volume.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/nvme.img.gz"><code>nvme.img.gz</code></a>
-                    — a ready-to-run, self-booting QEMU disk image (GPT). Its EFI partition holds
-                    <code>mr-bml</code>, and an on-disk root holds both kernels — so QEMU boots straight to the
-                    mr-bml menu, no <code>-kernel</code> needed. The fastest way to see QSOE run; see
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/nvme.img.gz"><code>nvme.img.gz</code></a>
+                    — a ready-to-run, self-booting QEMU disk image (GPT): mr-bml in its EFI partition,
+                    both kernels and the boot archive beside it, and a system volume with the base system
+                    installed as a package. QEMU boots straight to the mr-bml menu, no
+                    <code>-kernel</code> needed. The fastest way to see QSOE run; see
                     <strong>Running under QEMU</strong> below.</li>
-                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.3/bin/virtio.img.gz"><code>virtio.img.gz</code></a>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/virtio.img.gz"><code>virtio.img.gz</code></a>
                     — a companion root disk used <em>only</em> when running <strong>QSOE/L</strong> under QEMU
                     (stock seL4 predates the interrupt controller QEMU's NVMe needs, so it mounts its root from a
                     virtio disk instead). Not needed for QSOE/N or for real hardware.</li>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/run-nvme.sh"><code>run-nvme.sh</code></a>
+                    — the QEMU launcher for the two images.</li>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/modpkg.cpio"><code>modpkg.cpio</code></a>
+                    — the boot archive: taskman, <code>init</code>, the C library, the shell, drivers and
+                    utilities as a CPIO archive. One archive for every board and both variants: it carries
+                    both taskmen, and each kernel takes its own.</li>
+                <li><strong>The Skimmer microkernel</strong> — the kernel of <strong>QSOE/N</strong>,
+                    linked once per board, so take the one for yours:
+                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/skimmer-sifive.bin"><code>skimmer-sifive.bin</code></a> (HiFive
+                    Unmatched), <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/skimmer-vf2.bin"><code>skimmer-vf2.bin</code></a>
+                    (StarFive VisionFive&nbsp;2), <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/skimmer-k3.elf"><code>skimmer-k3.elf</code></a>
+                    (SpacemiT K3; <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/skimmer-k3.bin"><code>skimmer-k3.bin</code></a> is the same
+                    kernel as a flat image), or <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/skimmer-qemu.bin"><code>skimmer-qemu.bin</code></a>
+                    (QEMU <code>virt</code>). What the board decides is the load address; the platform
+                    itself is read from the device tree at run time. So the QEMU and Unmatched images are
+                    byte-for-byte identical, while the K3, whose DRAM starts at 4&nbsp;GiB, and the
+                    VisionFive&nbsp;2, whose firmware still holds the low end of its RAM, are each linked
+                    for their own address. Take one across those lines, in any direction, and the machine
+                    loads a kernel and then does nothing recognizable.</li>
+                <li><strong>The seL4 kernel</strong> — the kernel of <strong>QSOE/L</strong>, booted by
+                    mr-bml's <code>multiboot3</code> command with <code>modpkg.cpio</code> as its module:
+                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/sel4-sifive.elf"><code>sel4-sifive.elf</code></a>,
+                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/sel4-vf2.elf"><code>sel4-vf2.elf</code></a>,
+                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/sel4-qemu.elf"><code>sel4-qemu.elf</code></a>, and
+                    <a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/sel4-k3-15.elf"><code>sel4-k3-15.elf</code></a> for the K3 (k3sel4, on
+                    fifteen harts).</li>
+                <li><a href="https://github.com/qsoe-dev/dl/raw/main/releases/0.4/bin/mrbml-efi-riscv64_1.0_riscv64.deb"><code>mrbml-efi-riscv64_1.0_riscv64.deb</code></a>
+                    — <strong>mr-bml</strong>&nbsp;1.0, QSOE's own bootloader (an EFI application for RISC-V),
+                    as a Debian package for the board itself. It loads either variant and drives the boot
+                    menu on real hardware. A package rather than a bare binary because the image has to
+                    know where its configuration lives, which differs per machine: <code>mrbml-install</code>
+                    assembles it on the board, for that board's volume.</li>
               </ul>
               <p>In short: to <strong>run it in QEMU</strong>, grab <code>nvme.img.gz</code>
-                 (plus <code>virtio.img.gz</code> for QSOE/L) and see <strong>Running under QEMU</strong>.
-                 To put it on <strong>real hardware</strong>, you need the mr-bml package
-                 plus the kernels — <strong>QSOE/N</strong> uses <code>skimmer-&lt;board&gt;.bin</code> +
-                 <code>modpkg.cpio</code>,
-                 <strong>QSOE/L</strong> uses one of the <code>qsoe-l-*.elf</code> images — and see
-                 <strong>Installation</strong>.</p>
+                 (plus <code>virtio.img.gz</code> for QSOE/L) and <code>run-nvme.sh</code>, and see
+                 <strong>Running under QEMU</strong>. To put it on <strong>real hardware</strong>, you need
+                 the mr-bml package, <code>modpkg.cpio</code> and your board's kernels &mdash;
+                 <code>skimmer-&lt;board&gt;</code> for QSOE/N, <code>sel4-&lt;board&gt;.elf</code> for
+                 QSOE/L &mdash; and see <strong>Installation</strong>.</p>
             </div>
           </details>
           <details class="fold">
@@ -214,28 +217,30 @@
                 <li><code>qemu-system-riscv64</code> — version <strong>11.0.1 or newer</strong> for QSOE/N
                     (its NVMe needs the AIA interrupt controller).</li>
                 <li>edk2 RISC-V UEFI firmware — on Debian/Ubuntu, the <code>qemu-efi-riscv64</code> package.</li>
-                <li>The launcher <code><a href="https://gitlab.com/qsoe/os/-/blob/main/host_tools/run-nvme.sh">run-nvme.sh</a></code>
-                    from the <a href="https://gitlab.com/qsoe/os">os</a> repository — it wraps the right QEMU
+                <li>The launcher <code>run-nvme.sh</code>, among the downloads (and in the
+                    <a href="https://gitlab.com/qsoe/os">os</a> repository) — it wraps the right QEMU
                     machine, firmware and disks for each variant, so you don't have to.</li>
               </ul>
               <h4>Run it</h4>
               <pre class="cmd"><span class="c"># unpack the image(s) — add virtio.img.gz only if you want QSOE/L</span>
 gunzip nvme.img.gz virtio.img.gz
 
-<span class="c"># point the launcher at them and pick a variant from its menu</span>
-NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh</pre>
-              <p>Pass <code>n</code> or <code>l</code> to skip the menu (<code>./run-nvme.sh n</code>). The script
-                 selects the matching QEMU machine automatically — QSOE/N on the AIA machine with an NVMe root,
-                 QSOE/L on the PLIC machine with the virtio root disk. The mr-bml menu and the system console
-                 both appear on your terminal; choose a variant and it boots to a <code>login:</code> prompt.
-                 Log in as <code>root</code> with password <code>QSOE</code>.</p>
+<span class="c"># point the launcher at them and name the variant: n for QSOE/N, l for QSOE/L</span>
+NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh n --uefi
+NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh l --uefi</pre>
+              <p>The variant is not optional: it selects the QEMU machine &mdash; QSOE/N on the AIA machine
+                 with an NVMe root, QSOE/L on the PLIC machine with the virtio root disk &mdash; so pick the
+                 matching entry in mr-bml's menu. <code>--uefi</code> boots through the distribution's edk2.
+                 The mr-bml menu and the system console both appear on your terminal, and the chosen variant
+                 boots to a <code>login:</code> prompt. Log in as <code>root</code> (password
+                 <code>QSOE</code>) or <code>user</code> (password <code>skimmer</code>).</p>
             </div>
           </details>
           <details class="fold">
             <summary>Installation</summary>
             <div class="fold-body">
-              <p>Real hardware, real disk. QSOE 0.3 boots on the SiFive HiFive Unmatched (FU740), the
-                 StarFive VisionFive&nbsp;2 (JH7110) and the SpacemiT K3 Pico-ITX; on the K3, QSOE/N only.
+              <p>Real hardware, real disk. QSOE 0.4 boots on the SiFive HiFive Unmatched (FU740), the
+                 StarFive VisionFive&nbsp;2 (JH7110) and the SpacemiT K3 Pico-ITX, both variants on each.
                  This assumes a board already running Linux —
                  you'll be placing files on its existing EFI and boot partitions, so familiarity with the
                  board's firmware is expected.</p>
@@ -251,8 +256,9 @@ NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh</pre>
                     saved once as <code>.bak</code>). <code>mrbml-install(8)</code> has the explicit
                     <code>--root-label</code> / <code>--prefix</code> forms.</li>
                 <li>On your boot/root filesystem, create <code>/boot/qsoe/</code> and copy the kernels there:
-                    your board's <code>skimmer-&lt;board&gt;.bin</code> + <code>modpkg.cpio</code> for QSOE/N,
-                    <code>qsoe-l-&lt;board&gt;.elf</code> for QSOE/L.</li>
+                    <code>modpkg.cpio</code>, which both variants boot, and your board's
+                    <code>skimmer-&lt;board&gt;</code> kernel for QSOE/N and <code>sel4-&lt;board&gt;.elf</code>
+                    for QSOE/L.</li>
                 <li>Create <code>/boot/mr-bml/mr-bml.cfg</code> with one entry per variant — for example:</li>
               </ol>
               <pre class="cmd"><span class="c"># /boot/mr-bml/mr-bml.cfg  — adjust the mainfs= partition to your disk</span>
@@ -261,23 +267,30 @@ menuentry 'QSOE/N (Skimmer)' {
     modpkg /boot/qsoe/modpkg.cpio
 }
 menuentry 'QSOE/L (seL4)' {
-    kernel /boot/qsoe/qsoe-l-sifive.elf mainfs=/dev/nvme0n1p8
+    multiboot3 /boot/qsoe/sel4-sifive.elf mainfs=/dev/nvme0n1p8
+    module3    /boot/qsoe/modpkg.cpio modpkg
 }</pre>
               <p>The <code>mainfs=</code> device names the partition holding the QSOE root filesystem (fs-qrv) —
                  set it to whichever partition you've devoted to QSOE on your board. On real hardware there is
-                 no QEMU virtio split: <em>both</em> variants drive the NVMe disk directly.</p>
+                 no QEMU virtio split: <em>both</em> variants drive the NVMe disk directly. Chapter&nbsp;2 of the
+                 User Guide covers each board.</p>
             </div>
           </details>
           <details class="fold">
             <summary>Building from source</summary>
             <div class="fold-body">
               <p>QSOE is built with a <code>riscv64-linux-gnu-</code> cross toolchain (rv64gc) and a stock
-                 <code>make</code>; QEMU is handy for testing. The umbrella repository orchestrates the build and
-                 pulls in the component repositories that match its release tag.</p>
+                 <code>make</code>; QEMU is handy for testing. The package manager, <code>qupkg</code>, is
+                 written in FreePascal, so the build also wants <code>fpc</code>; QSOE/L's adds seL4's
+                 tools (<code>cmake</code>, <code>ninja</code>, <code>dtc</code> and a few Python
+                 modules). <code>make</code> checks for all of them first and names what is missing. The
+                 umbrella repository orchestrates the build and pulls in the component repositories that
+                 match its release tag.</p>
               <pre class="cmd">git clone https://gitlab.com/qsoe/os
 cd os
 make prepare   <span class="c"># fetch the components for this tag (see component.list)</span>
 make           <span class="c"># build both variants: QSOE/N, then QSOE/L</span>
+make nvme      <span class="c"># the disk image, its system volume an installed qsoe-base</span>
 make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, virtio.img.gz)</span></pre>
               <p>QSOE/L additionally shallow-clones the seL4 kernel during <code>make prepare</code>. The build
                  produces exactly the files on the Downloads list. The whole tree is Apache-2.0; the source
@@ -292,7 +305,8 @@ make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, vi
                 <li><a href="https://github.com/qsoe-dev/doc/raw/main/Design.pdf"><code>Design.pdf</code></a>
                     — the architecture: the two-kernel model, taskman, the IPC and resource-manager design.</li>
                 <li><a href="https://github.com/qsoe-dev/doc/raw/main/UserGuide.pdf"><code>UserGuide.pdf</code></a>
-                    — installation, the shell, the basic commands, the text editor and the utilities.</li>
+                    — installation on each board, the shell, the basic commands, the text editor and the
+                    utilities, sound, and packages.</li>
                 <li><a href="https://github.com/qsoe-dev/doc/raw/main/ProgrammingBook.pdf"><code>ProgrammingBook.pdf</code></a>
                     — programming for QSOE, including the <strong>Resource Server Framework</strong> chapter.</li>
                 <li><a href="https://github.com/qsoe-dev/doc/raw/main/AppPortingGuide.pdf"><code>AppPortingGuide.pdf</code></a>
@@ -306,7 +320,7 @@ make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, vi
                 <li><a href="https://github.com/qsoe-dev/doc/raw/main/LibcReference.pdf"><code>LibcReference.pdf</code></a>
                     — the C library reference. A delta rather than a complete reference: the functions
                     libc gained since 0.1, grouped by subject, in the entry shape a QNX reader already
-                    knows — with, since 0.3, a chapter for the new release and an appendix that compiles
+                    knows — with a chapter for each release since 0.3, and an appendix that compiles
                     SQLite against QSOE and lists exactly what it finds missing.</li>
               </ul>
             </div>
@@ -315,7 +329,7 @@ make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, vi
             <summary>Roadmap</summary>
             <div class="fold-body">
               <p>It is often said that the Linux kernel has no roadmap. QSOE does — the releases
-                 that carry it from today's <strong>0.3</strong> to <strong>1.0</strong> are mapped
+                 that carry it from today's <strong>0.4</strong> to <strong>1.0</strong> are mapped
                  out, feature by feature. A working plan, not a contract: milestones shift as the
                  work reveals what is really next, and they have.</p>
               <p>1.0 is a capability rather than a compatibility claim: <em>a RISC-V real-time
@@ -333,18 +347,22 @@ make dist      <span class="c"># optional: the QEMU disk images (nvme.img.gz, vi
                     stops being something observed over a serial cable and becomes something a
                     person sits at. <em>(released September 2026 —
                     <a href="qsoe_0.2.html">release notes</a>)</em></li>
-                <li class="now"><code>0.3</code> — <strong>Writable filesystem.</strong> <code>qrvfs</code>
+                <li><code>0.3</code> — <strong>Writable filesystem.</strong> <code>qrvfs</code>
                     writes: create, unlink, truncate, rename, symbolic links; checked by
                     <code>fscheck</code> before every mount and proven by a stress that fills the disk
                     and reads every byte back. With it: taskman as the loader sharing one copy of a
                     library's text, identity that reaches every server, the VisionFive&nbsp;2, and
                     QSOE/L on every hart. A disk that is only read can afford to be approximate; a disk
-                    that is compiled on cannot — and 0.6 compiles on it. <em>(current —
+                    that is compiled on cannot — and 0.6 compiles on it. <em>(released September 2026 —
                     <a href="qsoe_0.3.html">release notes</a>)</em></li>
-                <li><code>0.4</code> — <strong>Sound out: <code>deva-hdmi</code>.</strong> HDMI audio
-                    brought up as a device. Audio is the instrument for every measurement from here
-                    to 1.0 — a dropped buffer is audible long before it is visible — which is why it
-                    comes this early.</li>
+                <li class="now"><code>0.4</code> — <strong>Sound out.</strong> Audio on every board and
+                    both kernels &mdash; HDMI, DisplayPort and the VisionFive&nbsp;2's jack &mdash; with a
+                    player for WAV and Ogg Vorbis, clean beside the full test suite. Audio is the
+                    instrument for every measurement from here to 1.0 — a dropped buffer is audible long
+                    before it is visible — which is why it comes this early. With it: the base system as
+                    a package, the <code>qupkg</code> package manager, and a C compiler that runs on
+                    QSOE. <em>(current —
+                    <a href="qsoe_0.4.html">release notes</a>)</em></li>
                 <li><code>0.5</code> — <strong>The real-time package.</strong> Priorities, interrupt
                     service threads, priority inheritance and bounded paths end to end: up to N
                     hard-real-time tasks on an N-CPU system, with every step between an interrupt and
