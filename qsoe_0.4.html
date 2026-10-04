@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QSOE 0.4 — release notes · QSOE Systems</title>
+  <meta name="description" content="QSOE 0.4 release notes: sound on every board and both kernels, with a dropped frame defined in the source; the base system as a package, a package manager and a native C compiler; one C library and one boot archive for both kernels; QSOE/L by Multiboot3 on every board; background jobs; and everything else that changed since 0.3.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ---- release-notes page, expressed in the shared tokens ---- */
+
+    .panels .panel + .panel { margin-top: 1.5rem; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      margin: 0 0 0.4rem;
+    }
+    .panel h2.rel {
+      font-size: clamp(1.9rem, 5vw, 2.4rem);
+      line-height: 1.15;
+      margin: 0 0 0.3rem;
+    }
+    .relmeta {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--accent-deep);
+      margin: 0 0 1.4rem !important;
+      opacity: 0.9;
+    }
+
+    /* component-set table */
+    .vtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.4rem 0 0.4rem;
+    }
+    .vtable th, .vtable td {
+      text-align: left;
+      padding: 0.42rem 0.7rem 0.42rem 0;
+      border-bottom: 1px solid rgba(14, 124, 147, 0.16);
+      color: var(--ink-soft);
+    }
+    .vtable th {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      font-weight: 500;
+    }
+    .vtable td.v { font-family: var(--font-mono); white-space: nowrap; }
+    .vtable td.now { color: var(--ink); font-weight: 500; }
+    .vtable .what { color: var(--ink); }
+
+    /* table of contents */
+    .toc {
+      list-style: none;
+      margin: 0.6rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+    }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* a highlight: bold lead-in, then prose */
+    .hl { margin: 0 0 1.15rem; color: var(--ink-soft); }
+    .hl b { color: var(--ink); }
+    .hl:last-child { margin-bottom: 0; }
+
+    /* nested detail under a tidy bullet */
+    ul.tidy li p { margin: 0.25rem 0 0; }
+    ul.tidy ul.tidy { margin-left: 1rem; }
+
+    .note {
+      margin: 1.2rem 0 0;
+      padding: 0.7rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      border-radius: 0 8px 8px 0;
+      color: var(--ink) !important;
+      font-size: 0.94rem;
+    }
+
+    pre.cmd {
+      margin: 0.5rem 0 1rem;
+      padding: 0.75rem 0.95rem;
+      background: var(--code-bg);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--ink);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    pre.cmd .c { color: var(--accent-deep); }
+
+    .panel h3:first-of-type { margin-top: 1.4rem; }
+
+    /* ---- collapsible sections, same idiom as the front page ---- */
+    .folds { margin-top: 1.4rem; }
+    .fold { border-top: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold:last-child { border-bottom: 1px solid rgba(14, 124, 147, 0.18); }
+    .fold > summary {
+      list-style: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      padding: 0.95rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      user-select: none;
+    }
+    .fold > summary::-webkit-details-marker { display: none; }
+    .fold > summary::before {
+      content: "\25B8";
+      color: var(--accent);
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+    .fold[open] > summary::before { transform: rotate(90deg); }
+    .fold[open] > summary { color: var(--ink); }
+    .fold > summary:hover { color: var(--accent); }
+    .fold-body { padding: 0 0 1.05rem 1.45rem; }
+    .fold-body p { margin: 0 0 1rem; color: var(--ink-soft); }
+    .fold-body p.lead { color: var(--ink); }
+    .fold-body ul.tidy { margin: 0.4rem 0 1rem; }
+    .fold-body h3:first-of-type { margin-top: 0.6rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .fold > summary::before { transition: none; }
+    }
+  </style>
+</head>
+<body class="subpage">
+  <div class="sky-cloud c1" aria-hidden="true"></div>
+  <div class="sky-cloud c2" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="site-head">
+      <a href="index.html"><img class="emblem" src="emblem.svg" alt="" aria-hidden="true"></a>
+      <h1 class="site-title"><a href="index.html">QSOE&nbsp;Systems</a></h1>
+      <nav class="tabs">
+        <a class="tab" href="index.html">QSOE OS</a>
+        <a class="tab" href="hfi/index.html">HFI</a>
+        <a class="tab" href="index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="panels">
+
+      <!-- ================= OVERVIEW ================= -->
+      <section class="panel">
+        <p class="eyebrow">Release notes</p>
+        <h2 class="rel">QSOE&nbsp;0.4</h2>
+        <p class="lead">Sound &mdash; on every board, on both kernels, and clean while the rest of the
+           machine is busy.</p>
+        <p class="relmeta">October 2026 · succeeds 0.3 (September 2026) · Apache-2.0</p>
+
+        <p>0.4 is the audio release. QSOE plays sound over HDMI from the Unmatched's GK208, over
+           DisplayPort on the K3, and over HDMI on the VisionFive&nbsp;2, on QSOE/N and on QSOE/L
+           alike, with one player and one engine under four drivers. A dropped frame is defined
+           precisely in the source, and the counters report what happened rather than what was hoped.
+           Sound is in this release because it is the instrument for everything after it: a late
+           buffer is heard long before it would be noticed any other way.</p>
+
+        <p>The instrument earned its place before the release was out. Playback on QSOE/L tore while
+           the test suite ran beside it, and nothing in the player or the driver was slow: the audio
+           data, and the driver's wake-up every period, went through taskman &mdash; the one process
+           every other process waits on. Both now bypass it, and the same song beside the same suite
+           is clean. What sound found is described below, because it is the kind of thing this release
+           exists to find.</p>
+
+        <p>Around it, 0.4 makes QSOE a system that is <em>installed</em> rather than unpacked: the base
+           system is a package, a package manager adds to it, a C compiler installed that way has
+           built and run its first program on QSOE's own filesystem, and <code>update-os</code>
+           installs new kernels from the running system. One boot archive boots both kernels; QSOE/L
+           boots by Multiboot3 on every board, the K3 included, with no elfloader. The C library is one
+           binary for both kernels, over a kernel library whose interface is written down. And the
+           shell runs jobs in the background, without a <code>fork()</code>.</p>
+
+        <h3>The component set</h3>
+        <table class="vtable">
+          <thead>
+            <tr><th>Component</th><th>What it is</th><th>0.3</th><th>0.4</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what"><code>nq</code></td>
+                <td>QSOE/N — the Skimmer microkernel and its taskman</td>
+                <td class="v">0.30</td><td class="v now">0.36</td></tr>
+            <tr><td class="what"><code>lq</code></td>
+                <td>QSOE/L — the seL4 taskman, its seam and its kernel patches</td>
+                <td class="v">0.26</td><td class="v now">0.32</td></tr>
+            <tr><td class="what"><code>libc</code></td>
+                <td>the C library, <code>libqsoe</code> and <code>crt0</code></td>
+                <td class="v">0.19</td><td class="v now">0.25</td></tr>
+            <tr><td class="what"><code>quser</code></td>
+                <td>the shared userspace: shell, drivers, servers, utilities</td>
+                <td class="v">0.18</td><td class="v now">0.24</td></tr>
+            <tr><td class="what"><code>qupkg</code></td>
+                <td>the package manager (<a href="https://gitlab.com/qsoe/programs/qupkg">separate
+                    project</a>, shipped in the base system)</td>
+                <td class="v">&mdash;</td><td class="v now">0.2</td></tr>
+            <tr><td class="what"><code>mr-bml</code></td>
+                <td>the bootloader (separate project, shipped alongside)</td>
+                <td class="v">1.0</td><td class="v now">1.0</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.9rem;">The umbrella records the tested set in
+           <code>component.list</code>; <code>make prepare</code> checks out exactly these. The
+           firmware the boards run is HFI BIOS 1.4.2.</p>
+
+        <h3>On this page</h3>
+        <ul class="toc">
+          <li><a href="#highlights">Highlights</a></li>
+          <li><a href="#changes">Full change list</a></li>
+          <li><a href="#gaps">Known gaps</a></li>
+          <li><a href="#get">Getting it</a></li>
+        </ul>
+      </section>
+
+      <!-- ================= HIGHLIGHTS ================= -->
+      <section class="panel" id="highlights">
+        <h2>Highlights</h2>
+        <p class="lead">Fourteen things that make 0.4 a different system to listen to, and to keep,
+           than 0.3.</p>
+
+        <p class="hl"><b>Sound on every board, on both kernels.</b> <code>deva-hda</code> drives an
+           HD Audio controller &mdash; the GK208's HDMI function on the Unmatched, or QEMU's &mdash;
+           <code>deva-k3dp</code> the K3's DisplayPort and <code>deva-jh7110hdmi</code> the
+           VisionFive&nbsp;2's HDMI, and <code>deva-pwmdac</code> is written for the VisionFive&nbsp;2's
+           3.5&nbsp;mm jack. Each is its hardware over one engine, <code>libaudio</code>, behind a
+           <code>/dev/snd/pcmC0D0p</code> node:
+           frames arrive by <code>write()</code>, everything else is a <code>devcontrol()</code>
+           command. The drivers are the same binaries on QSOE/N and QSOE/L.</p>
+
+        <p class="hl"><b>A dropped frame, defined.</b> <em>A frame the hardware played from a period the
+           client had not filled</em> &mdash; the definition is in the engine's header, and every
+           counter is measured against it: at each period's end, less than a period waiting counts the
+           whole period as dropped and one underrun. A period the interrupt thread slept through is
+           judged on its own and counted as a late wake; the silent tail of a drain is not a drop. The
+           engine is two threads and one ring with no lock &mdash; the dispatcher owns the write cursor,
+           the interrupt thread the hardware's &mdash; and the interrupt thread runs above the disk's
+           priority. It also learned to count honestly after NVIDIA's controller raised its interrupt
+           a few frames before the period boundary and the bookkeeping fell one period behind.</p>
+
+        <p class="hl"><b><code>qplay</code>.</b> WAV and Ogg Vorbis, every operand a track, so
+           <code>qplay *</code> plays a folder. When a device lacks a file's rate &mdash; the
+           VisionFive&nbsp;2 takes only 48&nbsp;kHz, most music is 44.1 &mdash; it converts through a
+           polyphase windowed-sinc filter with an exact ratio. With <code>-v</code> it prints what the
+           driver counted: frames written, played and dropped, interrupts, late wakes, and a histogram
+           of the interrupt thread's lateness.</p>
+
+        <p class="hl"><b>taskman off the audio path.</b> On QSOE/L a player's writes are larger than
+           seL4's IPC buffer and went through taskman to be copied; and a driver's interrupt thread
+           woke its own dispatcher, 47 times a second, with a pulse that went through taskman too. A
+           spawn off the NVMe holds taskman for tens of milliseconds, and during it the song tore
+           &mdash; 407 underruns in one song beside the suite on the VisionFive&nbsp;2. Now a player
+           attaches a <em>window</em> at setup and its writes go straight to the driver, and a process's
+           pulses to itself go into a lock-free queue in the process and a signal, never a message.
+           taskman's request rate during playback fell from about fifty a second to its background
+           level, and the song beside the suite is clean on both kernels.</p>
+
+        <p class="hl"><b>Windows given back while the server lives.</b> A window &mdash; the pages
+           taskman maps once into both ends of a connection so that large messages need no third
+           party &mdash; used to keep its server side until the server exited, so a long-lived audio
+           driver leaked one per player. Each window record now carries a state that the server's
+           library and taskman move only by compare-and-swap: taskman takes the server's side back
+           only when it is idle, and never asks the server. Testing it by killing players one after
+           another found that the resource-server framework dropped a cancelled client's call
+           unanswered, holding its window for good; it answers <code>EINTR</code> now. Twenty-one kills
+           and twenty plays later, the driver held nothing it should not.</p>
+
+        <p class="hl"><b>The base system is a package.</b> The image is an installed
+           <code>qsoe-base</code>: <code>/usr/bin</code>, <code>/usr/sbin</code>, <code>/usr/lib</code>
+           and <code>/usr/share</code> are links into its directory in the package store, and init
+           selects the <code>qsoe-base</code> that matches the boot archive it booted. The test suite,
+           the network test tools, the GPIO and I2C drivers and the audio samples are packages beside it.
+           <code>/usr</code> is 256&nbsp;MiB, and a Linux FUSE driver, built on the same filesystem
+           library as <code>fs-qrv</code>, reads and writes it on a development machine.</p>
+
+        <p class="hl"><b><code>qupkg</code>.</b> A package manager in FreePascal, ported from the
+           package manager of Serge Vakulenko's Braam system. The repository index is signed with
+           Ed25519 by keys an anchor shipped with the system vouches for, and names every package by
+           its SHA-256; packages unpack once into an immutable store; what is installed is a
+           <em>generation</em> of links, switched in with one <code>rename</code>, so a power cut
+           leaves the old set or the new one and never half of each. A repository is any directory
+           reachable by path &mdash; including one on another station over QSP.</p>
+
+        <p class="hl"><b>QSOE compiles C.</b> <code>qupkg install qjmcc</code> brings a C compiler that
+           runs on QSOE, with its assembler, the linker and the C library's SDK as dependencies, and
+           <code>qjmcc -o hello hello.c</code> builds a program that runs &mdash; preprocessed,
+           compiled, assembled and linked on QSOE's own filesystem. It is the first step of the 1.0
+           self-hosting criterion, taken through the package system rather than around it.</p>
+
+        <p class="hl"><b>One C library for both kernels.</b> The QNX-style native API &mdash;
+           channels, messages, pulses, <code>Sync*</code>, threads &mdash; moved out of
+           <code>libc.so</code> into <code>libqsoe.so</code>, built once per kernel and loaded by each
+           taskman under the one name. <code>libc.so</code> above it is now a single binary for QSOE/N
+           and QSOE/L, and <code>libqsoe.so</code> calls nothing in it. What the two export is written
+           down, one line per symbol in <code>abi/qsoe-abi0.exports</code>; the build fails on a removed
+           or unlisted export, packages depend on <code>qsoe-abi0</code>, and a call one kernel cannot
+           make yet is a stub that announces itself rather than a missing name. There is no weak
+           linkage anywhere: a program that needs a name nothing defines is refused at spawn with the
+           name, instead of running into a call at address zero.</p>
+
+        <p class="hl"><b>One boot archive; QSOE/L by Multiboot3, on the K3 too.</b> The same <code>modpkg.cpio</code>
+           boots both kernels: it carries both taskmen and both <code>libqsoe</code> variants, and each
+           kernel takes its own. QSOE/L no longer nests the elfloader, seL4, taskman and the userland
+           in one image: seL4 is patched to boot from mr-bml's <code>multiboot3</code> command, a stub
+           places taskman and hands it the archive as a module and a record of the boot, and the kernel
+           is a file beside the archive like Skimmer's. The seL4 changes are a patch series now, one
+           change per patch. <code>taskman.elf</code> went from 1.6&nbsp;MB to 516&nbsp;KB. And the K3,
+           QSOE/N only in 0.3, runs QSOE/L as well, on <code>k3sel4</code>, an overlay of seL4 16.0.0
+           for the SpacemiT SoC booted the same way &mdash; so every board runs both kernels.</p>
+
+        <p class="hl"><b>QSOE installs its own kernel.</b> <code>update-os</code> fetches a boot set
+           &mdash; the archive and each board's kernels &mdash; from a development station over QSP into
+           <code>/usr/boot</code>, all or nothing, keeping the previous set one step back. The boot
+           loader reads it straight from the system volume, found by its label. The first QSOE/L boot of
+           the K3 from files QSOE had deployed itself ran the whole suite in eleven seconds.</p>
+
+        <p class="hl"><b>Jobs in the background, without <code>fork()</code>.</b> <code>cmd &amp;</code>
+           spawns the program itself, or a second shell for shell code; <code>jobs</code>,
+           <code>fg</code>, <code>wait</code>, <code>kill&nbsp;%n</code> and <code>$!</code> work. A
+           background job reads <code>/dev/null</code>, and a finished one is reported at the next
+           prompt.</p>
+
+        <p class="hl"><b>A thread can be ended wherever it is.</b> On Skimmer, <code>ThreadDestroy</code>
+           reaches a thread spinning in user mode on another hart: the request is a bit in the one word
+           another hart may write, an IPI knocks the target into the kernel, and the target ends itself
+           on its way back out. Every park is a cancellation point that can be broken &mdash; message
+           queues, <code>nanosleep</code>, the sync objects, <code>InterruptWait</code>,
+           <code>ThreadJoin</code> &mdash; so <code>kill -9</code> of a runaway program means what it
+           says.</p>
+
+        <p class="hl"><b>Hundreds of suite runs in one boot.</b> Skimmer ran 270 passes of the suite on
+           the K3 in one boot, after three races &mdash; each one in a few hundred process ends &mdash;
+           were found and fixed, and every write to a thread's flags now panics, naming the line, if it
+           comes from the wrong hart. QSOE/L ran 104, after two walls: a memory pool nobody counted,
+           drained 72&nbsp;KiB per process, and a fault flag at bit&nbsp;16 that took every request on
+           a connection past the 65,536th for a fault. A server is now told, by a disconnect pulse, of
+           every connection a killed process left open.</p>
+      </section>
+
+      <!-- ================= THE FULL CHANGE LIST ================= -->
+      <section class="panel" id="changes">
+        <h2>The full change list</h2>
+        <p class="lead">Everything that changed since 0.3, by area. Open the parts you want &mdash;
+           or open them all and read it as one document.</p>
+        <div class="folds">
+
+          <details class="fold" id="sound">
+            <summary>Sound</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>The contract</strong> (<code>&lt;qsoe/audio.h&gt;</code>): nodes
+                <code>/dev/snd/pcmC&lt;card&gt;D&lt;dev&gt;p</code>; frames by <code>write()</code>;
+                <code>INFO</code>, <code>SETUP</code>, <code>START</code>, <code>STOP</code>,
+                <code>DRAIN</code>, <code>STATUS</code> and <code>CLEAR_STATS</code> by
+                <code>devcontrol()</code>. S16_LE; no resampling or mixing in a driver. A device says how
+                large a ring it can hold.</li>
+            <li><strong><code>libaudio</code></strong>: the PCM engine every driver links &mdash; the
+                lock-free ring, the period judgment, the dropped-frame accounting, and a period wake
+                that is one pulse to the server's own channel.</li>
+            <li><strong><code>deva-hda</code></strong>: HD Audio over PCI, stereo; MSI only. On the
+                Unmatched it maps only the GPU register pages it touches &mdash; the whole BAR was
+                refused once the console had carved past it.</li>
+            <li><strong><code>deva-k3dp</code></strong>: the K3's DisplayPort through its I2S and audio
+                DMA, fixed at 48&nbsp;kHz. Its descriptor ring lives in an SRAM that is not
+                cache-coherent and is written back explicitly &mdash; the difference between noise and
+                music.</li>
+            <li><strong><code>deva-jh7110hdmi</code></strong> and <strong><code>deva-pwmdac</code></strong>
+                on the VisionFive&nbsp;2, over the DesignWare AXI DMA; the two share the SoC's one DMA
+                interrupt, so one runs at a time, and HDMI is the one started at boot. Whether a link is
+                HDMI or DVI is the firmware's decision, from the sink's EDID: the driver refuses a DVI
+                link rather than change the picture.</li>
+            <li><strong><code>qplay</code></strong>: WAV and Ogg Vorbis (<code>stb_vorbis</code>; musl's
+                <code>libm</code>), tracks and folders, <code>--tone</code>, the rate converter with
+                <code>-R</code> to force or forbid it, real-time priority with <code>-P</code>, and the
+                counters with <code>-v</code>.</li>
+            <li><strong>Under QEMU</strong> <code>AUDIO=1 ./emu.sh</code> attaches an HD Audio controller
+                and records what the guest plays into a WAV file on the host, which
+                <code>wavcheck.py</code> judges; the suite's <code>[audio]</code> group runs with
+                <code>suite --audio</code>.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="kernels">
+            <summary>Kernels and IPC</summary>
+            <div class="fold-body">
+          <h3>Skimmer</h3>
+          <ul class="tidy">
+            <li><strong>Thread cancellation reaches a thread that is not listening</strong> (above):
+                <code>td_mpflags</code> as the one cross-hart word, <code>lwkt_unpark()</code>, the
+                victim ending itself in the trap tail; <code>MsgSendvnc</code> and
+                <code>SyncMutexLock</code> break only for termination, as their contract says.
+                <code>ThreadCancel</code> wakes a parked receiver with <code>EINTR</code> at once.</li>
+            <li><strong>Three races in thread teardown</strong> fixed: an exit that marked itself a
+                zombie before dropping its address space, two sweeps claiming one orphan, and a lost
+                read-modify-write on <code>td_flags</code> between <code>ThreadJoin</code> and the
+                zombie's hart. <code>td_flags</code> belongs to its hart, and a write from another one
+                panics with the file and line.</li>
+            <li><strong><code>hartwatch</code></strong>: each hart watches the next one's tick count, and
+                a hart silent for two seconds is named once, with its counters, its current thread and
+                its trace ring.</li>
+            <li><strong>A thread's CPU time is kept</strong>, banked once per switch with interrupts
+                already off; <code>ps -H</code> and <code>sysinfo</code> print it. It found an audio gap
+                on the Unmatched: a player using 16% of a hart where it needed 3%.</li>
+            <li><strong>A killed or faulting process</strong> has a disconnect pulse sent for every
+                connection it held; every pulse names its connection, as on QNX.</li>
+            <li><strong><code>mremap</code></strong> moves a mapping, and the <code>mmap</code> cursor
+                stops below the main stack, which a large enough mapping used to reach.</li>
+          </ul>
+          <h3>QSOE/L</h3>
+          <ul class="tidy">
+            <li><strong>seL4 is patched from <code>patches/seL4/</code></strong>, one change per patch:
+                among them the modern SBI extensions only, a cold reset through SBI SRST so
+                <code>reboot</code> no longer powers the board off, and the Multiboot3 boot.</li>
+            <li><strong>Self-pulses bypass taskman</strong> (above): a process connecting to its own
+                ringed channel receives the channel's notification and its connection's id, and its
+                pulses go into a per-channel lock-free queue with a sequence number per cell, since the
+                sender may be an interrupt thread that preempted a receiver on its own hart.</li>
+            <li><strong>Pulses no longer wait inside taskman</strong>: each receiving process has a
+                pulse page with a ring per channel, which taskman fills and the receiver reads itself.
+                The fetch that a server once made, at whatever moment its pulse came, could meet a
+                taskman blocked in a call to that same server.</li>
+            <li><strong>Windows</strong>: a server learns where a window is from a records page taskman
+                fills before the client hears of it, and never asks taskman &mdash; the earlier hello
+                and query could deadlock against a taskman that was itself the client. Windows are
+                given back while the server lives (above).</li>
+            <li><strong><code>libseam</code></strong>: the client side of IPC &mdash; connections,
+                windows, <code>MsgSend</code> &mdash; is written once and compiled into both
+                <code>libqsoe.so</code> and taskman, which opens the program it loads exactly as a
+                client opens a file.</li>
+            <li><strong>Every thread starts through a fence</strong>: RISC-V keeps no coherence between
+                data stores and instruction fetch, seL4 gives userspace no remote
+                <code>fence.i</code>, and a program placed on another hart than the one taskman wrote it
+                from faulted on its first instruction, at random. Every thread now starts at a page of
+                <code>fence.i; jr t0</code>.</li>
+            <li><strong>Condvars park</strong>, on one park queue with the futex contract; a parked
+                thread can be destroyed without hanging its joiner.</li>
+            <li><strong>The master pool is counted</strong>: thread and channel creation draw from the
+                caller's memory, answered reply objects are reused, and <code>/sys/stats</code> carries
+                eight gauges of what is left. The fault flag moved from bit&nbsp;16 to bit&nbsp;30,
+                guarded by asserts.</li>
+            <li><strong>A refused spawn gives back everything it took</strong>, through one exit that
+                frees in teardown order; the K3 ran twenty passes in one boot with taskman's slots
+                flat.</li>
+            <li><strong><code>/dev/urandom</code></strong>; a child no longer outlives its parent on paper;
+                <code>sysinfo</code> says &ldquo;not measured&rdquo; for the CPU load seL4 does not
+                account, and <code>ps -H</code> prints <code>-</code> for a thread's CPU time, not a
+                zero.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="memory">
+            <summary>Memory and the loader</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong><code>libqsoe.so</code> beneath <code>libc.so</code></strong> (above). taskman
+                binds <code>libqsoe.so</code> first, then <code>libc.so</code> against it, then the
+                program's other libraries, then the program.</li>
+            <li><strong>A library is found on disk</strong>: <code>/lib</code> in the boot archive, then
+                <code>/usr/lib</code>, <code>/usr/local/lib</code> and the package farm's
+                <code>/usr/pkg/lib</code>. A library read from disk is kept until reboot, in a slot of its
+                own, so its text is shared like the archive's.</li>
+            <li><strong>Images arrive 64&nbsp;KiB a message</strong>, not 896&nbsp;bytes: on QSOE/N into
+                taskman's scratch area by the kernel's large-message copy, on QSOE/L through a window
+                taskman keeps on each filesystem connection. On QSOE/L a relocation pass also maps
+                each page once rather than once per write. Together: a 500&nbsp;KB spawn on QEMU went
+                from 404 to 166&nbsp;ms, and a suite pass on the K3 from 19.9 to 11&nbsp;s.</li>
+            <li><strong>A spawn carries its arguments by reference</strong>, up to
+                <code>TM_ARG_MAX</code>; taskman reads the strings straight onto the child's stack. The
+                1&nbsp;KiB blob and its limits of 16 and 32 strings are gone.</li>
+            <li><strong>A refused spawn leaves taskman as it was</strong> on QSOE/N too: a spawn that
+                failed half-way through loading left pages mapped in taskman's own space, and the next
+                one made Skimmer panic.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="process">
+            <summary>Processes, sessions and signals</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong><code>posix_spawn</code> attributes</strong>: process groups, session and ids
+                applied before the child exists, and signal mask, ignored signals and scheduling in the
+                child's own startup; a terminating signal is reported, so <code>waitpid</code> tells
+                Ctrl-C from an exit.</li>
+            <li><strong>Ctrl-C reaches a command run by a script or <code>sh -c</code></strong>: only an
+                interactive shell hands the terminal over now. The file manager's commands could not be
+                interrupted before.</li>
+            <li><strong>The loader's errno reaches the requester</strong>: <code>ENOEXEC</code> for a file
+                that is neither an image nor a <code>#!</code> script, which is the one distinction a
+                shell needs to run a file as a script.</li>
+            <li><strong>A refused spawn releases the descriptor holders</strong> it claimed, so a pipe's
+                write end does not keep a phantom writer.</li>
+            <li><strong>taskman's log</strong> is a 64&nbsp;KiB ring from the first line of the boot,
+                readable at <code>/sys/log</code> and merged into <code>sloginfo</code>.
+                <code>/proc/&lt;pid&gt;/info</code> counts a process's memory, threads, channels and
+                connections.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="fs">
+            <summary>Filesystems, paths and resource managers</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>A link may lead out of a filesystem.</strong> A server that meets a symbolic link
+                whose target leaves its mount answers <code>ERELINK</code> with the path its walk
+                reached, and the client's library resolves it from the root and repeats the verb &mdash;
+                every path verb goes through one function now. Found by the package system's link farm,
+                whose absolute targets cross from <code>/var</code> into <code>/usr</code>.</li>
+            <li><strong><code>/var</code> lives on the disk</strong>, as a link in the boot archive to
+                <code>/usr/var</code>; so do the package system's repository and anchor files under
+                <code>/usr/conf</code>.</li>
+            <li><strong>Pathmgr links on request</strong> (root's): owned by their maker, removed only by
+                it, gone when it exits, followed in chains; QSP uses one to make a station's own name
+                under <code>/net</code> lead back to <code>/</code>. A directory the tree implies
+                &mdash; <code>/dev/snd</code>, made by <code>/dev/snd/pcmC0D0p</code> &mdash; resolves
+                as one.</li>
+            <li><strong><code>lstat</code> of the archive's own links</strong> returns the link; archive
+                files report their entry's time rather than 1970.</li>
+            <li><strong><code>libqrvfs</code></strong>: the filesystem's format and operations in one
+                library, under <code>fs-qrv</code> and the FUSE driver alike.</li>
+            <li><strong>The resource-server framework</strong> answers a cancelled client's deferred call
+                with <code>EINTR</code> instead of dropping it, and tells a server when its client
+                ends.</li>
+            <li><strong>Ownership is checked on <code>chown</code> and <code>chmod</code></strong>: the
+                framework applies the POSIX rules for every server built on it, so only root gives a
+                file away, and only its owner or root changes its mode, its group or its times.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="pkg">
+            <summary>Packages and the system image</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong><code>qupkg</code></strong>: <code>update</code>, <code>search</code>,
+                <code>info</code>, <code>install</code> (by name or from a <code>.qup</code> file),
+                <code>remove</code>, <code>autoremove</code>, <code>upgrade</code>, <code>list</code>,
+                <code>files</code>, <code>verify</code>, <code>clean</code>. A <code>.qup</code> is a
+                newc cpio &mdash; the format taskman reads for the boot archive &mdash; compressed as
+                one LZ4 frame. The farm links <code>bin</code>, <code>sbin</code>, <code>lib</code> and
+                the manual pages; the default <code>PATH</code> ends with them.</li>
+            <li><strong>The image</strong>: an installed <code>qsoe-base</code>, a 256&nbsp;MiB
+                <code>/usr</code> volume labelled <code>qsoe-usr</code>, and the optional packages
+                <code>qsoe-tests</code>, <code>qsoe-net-tools</code>, <code>qsoe-gpio-i2c</code> and
+                <code>qsoe-audio-samples</code>. The disk keeps what the system wrote between builds,
+                and <code>fscheck</code> runs before every boot.</li>
+            <li><strong><code>qsoe-c-sdk</code></strong>: the headers, <code>crt0.o</code>,
+                <code>libc.so</code> and <code>libqsoe.so</code> to link against; the compiler packages
+                in the repository depend on it.</li>
+            <li><strong><code>update-os</code></strong> (above), and <code>/usr/local/sbin</code> on the
+                default search path for the administrator's tools.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="drivers">
+            <summary>Drivers and hardware</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>The audio drivers</strong> (see Sound).</li>
+            <li><strong><code>pci-server</code></strong>: single-message MSI, and two BARs the firmware's
+                layout got wrong; the DesignWare and PLDA MSI demultiplexers run at an interrupt
+                thread's priority rather than an ordinary user's.</li>
+            <li><strong><code>devn-gem</code> receives on its interrupt.</strong> It polled every
+                millisecond, which capped a QSP transaction at one per poll: a 57.9&nbsp;MB copy from a
+                development station to the Unmatched took 73&nbsp;s on QSOE/L. On interrupts it takes
+                18&nbsp;s there and 12&nbsp;s on QSOE/N &mdash; four and six times faster. The
+                DesignWare and GEM drivers' watchdogs act only on a frame left a whole period, so they
+                no longer steal ordinary traffic.</li>
+            <li><strong>The JH7110 libraries</strong> &mdash; its clocks, the AXI DMA &mdash; and GPIO and
+                I2C drivers for the VisionFive&nbsp;2, shipped as a package with an
+                <code>i2cprobe</code> tool.</li>
+            <li><strong>The console</strong>: a serial terminal's size is asked for, by
+                <code>resize</code> and by <code>getty</code> before each login; the file manager's
+                cursor rests where input happens.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="libc">
+            <summary>The C library</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>The split</strong> (above): <code>libqsoe.so</code>, its ABI file, the no-weak-symbol
+                check on every image. <code>open</code>, <code>read</code>, <code>write</code>,
+                <code>nanosleep</code>, <code>_Exit</code> and <code>posix_spawn</code> are kernel-neutral
+                and live in the shared body.</li>
+            <li><strong>stdio reads a buffer's worth per <code>read()</code></strong>, not one byte.</li>
+            <li><strong><code>pathmgr_symlink()</code> and <code>pathmgr_unlink()</code></strong>;
+                <code>lstat()</code> reports a link's own record; a path through a link to a directory
+                lands in the directory.</li>
+            <li><strong><code>mremap</code> that moves</strong>, <code>access()</code> that asks the file,
+                <code>strtok_r</code>, musl's <code>libm</code>; a thread attribute's priority 0 means the
+                ordinary user priority, as the header always said.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="shell">
+            <summary>Shell and utilities</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>Background jobs</strong> (above). A command that cannot be run is that command's
+                failure, not the shell's.</li>
+            <li><strong>New:</strong> <code>tail</code> (with <code>-f</code>), <code>head</code>,
+                <code>sha512sum</code>, <code>ls -d</code>, <code>resize</code>, <code>qplay</code>,
+                <code>qupkg</code>, <code>update-os</code>, <code>workday</code>; manual pages for
+                several of them.</li>
+            <li><strong><code>qview</code></strong> pages down with Space.</li>
+            <li><strong>The shared suite</strong> grew from 502 checks to nearly eight hundred:
+                793 of 793 pass on QSOE/N under QEMU, 785 of 786 on QSOE/L &mdash; the one is the
+                <code>[QSOE/N only]</code> case of cancelling a blocked thread, reported rather than
+                hidden. It ships as the <code>qsoe-tests</code> package.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="build">
+            <summary>Boot, build and tooling</summary>
+            <div class="fold-body">
+          <ul class="tidy">
+            <li><strong>One boot archive</strong> (<code>make modpkg</code>) for both kernels;
+                <code>modpkg-l.cpio</code> is gone. QSOE/L's build produces
+                <code>sel4-&lt;board&gt;.elf</code>, a Multiboot3 kernel; the elfloader rules are gone.</li>
+            <li><strong><code>lq/emu.sh</code> boots QEMU the way the boards boot</strong>: HFI firmware,
+                mr-bml, <code>multiboot3</code> and <code>module3</code>, from a small disk laid by
+                <code>mklqboot.sh</code>.</li>
+            <li><strong>HFI BIOS 1.4.2</strong>: the VisionFive&nbsp;2's reboot no longer wedges. The
+                video firmware puts an HDMI link in HDMI mode only when the sink's EDID says it is one,
+                and the audio drivers never change the picture.</li>
+            <li><strong>A FUSE driver</strong> mounts a QSOE volume on Linux, by device or by label.</li>
+          </ul>
+            </div>
+          </details>
+
+          <details class="fold" id="bugs">
+            <summary>Bugs worth naming</summary>
+            <div class="fold-body">
+          <p class="lead">Found in this cycle, each with what it taught.</p>
+          <ul class="tidy">
+            <li><strong>The song that tore beside the suite</strong>, bisected by ear: clean beside CPU
+                loops, three hundred spawns from RAM and a hundred reads of the suite's binary; torn
+                beside spawns from the disk. taskman was reading an image, and a driver's own wake-up
+                was waiting in its queue. A third party on a data path is a party to every stall the
+                data path can meet.</li>
+            <li><strong>A cancelled call dropped unanswered</strong> held a window, a reply object and a
+                slot per killed client; six kills exhausted an audio driver's address space. Found by
+                killing the player in a loop &mdash; the simplest test there is.</li>
+            <li><strong>A program faulted on its first instruction, at random</strong>, on a board with
+                many harts and never on QEMU: instruction fetch on the new hart still saw the frame's
+                previous tenant.</li>
+            <li><strong>Every request on a new connection taken for a fault</strong> after 65,536
+                connections, because the fault flag lived where a connection id could reach it.</li>
+            <li><strong>A shell that could not interrupt what a script ran</strong>: the terminal was
+                handed to a pid whose process group had no members.</li>
+            <li><strong>The receive park kept a stale message pointer</strong>, and once a park loop
+                re-tested before every switch, a spurious wake handed one message to a server forever.</li>
+            <li><strong>QSP at 0.79&nbsp;MB/s on a gigabit link</strong> was a driver polling once a
+                millisecond, phase-locked into every transaction.</li>
+          </ul>
+            </div>
+          </details>
+        </div>
+        <p style="margin-top:1.4rem; font-size:0.9rem;">
+           <a href="#" id="expand-all">Open every section</a> · the same ground is covered in the
+           per-component <code>CHANGELOG.md</code> files in the
+           <a href="https://gitlab.com/qsoe">source repositories</a>.</p>
+      </section>
+
+      <!-- ================= GAPS ================= -->
+      <section class="panel" id="gaps">
+        <h2>Known gaps</h2>
+        <p class="lead">Stated rather than implied away. These are the things 0.4 does not do.</p>
+
+        <ul class="tidy">
+          <li><strong>Timing on QSOE/L.</strong> <code>nanosleep</code> is a spin on <code>rdtime</code>
+              and a yield, because taskman has no timer of its own to wake a sleeper;
+              <code>TimerSettime</code> is a stub, so <code>poll()</code> ignores its timeout; and
+              taskman's timers fire only when a request arrives.</li>
+          <li><strong>No timed waits on either kernel</strong>: <code>pthread_cond_timedwait</code>,
+              <code>TimerTimeout</code> for a condvar, a bounded <code>InterruptWait</code>.</li>
+          <li><strong>Cancelling a blocked thread on QSOE/L</strong> takes effect when the call returns,
+              not before, as does a signal caught by a handler; on Skimmer the thread is woken with
+              <code>EINTR</code>. A client REPLY-blocked on a server that exits parks for good there.</li>
+          <li><strong>taskman serves from one thread</strong> on both kernels, so loading a program still
+              delays every other request; the pool on QSOE/N is held to one thread until a lost wake
+              between harts is found.</li>
+          <li><strong>QSP moves 896 bytes per read with one transaction in flight</strong>, does not use
+              windows, and carries no credentials the far side acts on. The K3 on QSOE/L is the slowest
+              station, for a reason not yet measured.</li>
+          <li><strong>No <code>dlopen()</code></strong>, and constructors in <code>DT_INIT_ARRAY</code>
+              are not run.</li>
+          <li><strong>A clock kept by the platform cannot be set</strong> (the K3), and the VisionFive&nbsp;2
+              has no battery-backed clock QSOE recognizes.</li>
+          <li><strong>The VisionFive&nbsp;2's jack and its HDMI</strong> cannot play at once; HDMI is
+              the one started at boot.</li>
+          <li><strong><code>qupkg</code> has no command to switch back to an earlier
+              generation</strong>, though every generation it made is still on the disk.</li>
+          <li><strong>A home directory is persistent, its working directories are not</strong>:
+              <code>~/proj</code> and <code>~/bin</code> are in memory, refilled by
+              <code>workday</code>.</li>
+          <li><strong><code>fs-tmpfs</code> does not check permissions</strong>, on the object or on
+              the path to it.</li>
+          <li><strong>A program that keeps a connection to its own channel</strong> must detach it
+              before it exits: the descriptors closed at exit include it, and the close message sent
+              to a channel nobody is receiving on waits for good.</li>
+        </ul>
+      </section>
+
+      <!-- ================= GET IT ================= -->
+      <section class="panel" id="get">
+        <h2>Getting it</h2>
+        <p>Pre-built images are published at
+           <a href="https://github.com/qsoe-dev/dl">github.com/qsoe-dev/dl</a>; the
+           <a href="index.html">front page</a> lists what each file is and how to run it under QEMU or
+           install it on a board. Under QEMU, name the variant &mdash; it selects the machine &mdash;
+           and boot through the distribution's edk2:</p>
+        <pre class="cmd"><span class="c"># unpack the images (virtio.img is QSOE/L's root under QEMU)</span>
+gunzip nvme.img.gz virtio.img.gz
+
+<span class="c"># QSOE/N; for QSOE/L say l, and pick the matching entry in mr-bml's menu</span>
+NVME_IMG=./nvme.img VIRTIO_IMG=./virtio.img ./run-nvme.sh n --uefi</pre>
+        <p>To build from source:</p>
+        <pre class="cmd">git clone https://gitlab.com/qsoe/os
+cd os
+make prepare   <span class="c"># fetch the 0.4 component set (see component.list)</span>
+make           <span class="c"># build both variants: QSOE/N, then QSOE/L</span>
+make nvme      <span class="c"># the disk image, its system volume an installed qsoe-base</span>
+make dist      <span class="c"># optional: the QEMU disk images</span></pre>
+        <p>The manuals &mdash; <code>Design.pdf</code>, <code>UserGuide.pdf</code>,
+           <code>ProgrammingBook.pdf</code>, <code>AppPortingGuide.pdf</code>,
+           <code>Networking.pdf</code> and <code>LibcReference.pdf</code> &mdash; are published
+           alongside each release at <a href="https://github.com/qsoe-dev/doc">github.com/qsoe-dev/doc</a>.
+           The Design manual has a new chapter on the window, the mechanism behind large messages on
+           QSOE/L, and one on storage and packages; the User Guide has chapters on sound and on
+           packages. Documentation is a release gate: no version ships before the manuals are brought
+           up to the tree.</p>
+        <p class="note">Next is <strong>0.5</strong> &mdash; the real-time package: priorities,
+           interrupt service threads, priority inheritance and bounded paths end to end, every step
+           between an interrupt and the thread that services it accounted for &mdash; and a first honest
+           worst-case latency figure. Sound is how it will be heard.</p>
+        <a class="back-link" href="index.html">Back to QSOE Systems</a>
+      </section>
+
+    </main>
+
+    <footer>© <span id="year">2026</span> QSOE Systems</footer>
+  </div>
+
+  <script>
+    (function () {
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // a link into a collapsed section must open it, not silently do nothing
+      function openTarget() {
+        var id = (location.hash || '').replace('#', '');
+        if (!id) return;
+        var el = document.getElementById(id);
+        while (el) {
+          if (el.tagName === 'DETAILS') el.open = true;
+          el = el.parentElement;
+        }
+      }
+      window.addEventListener('hashchange', openTarget);
+      openTarget();
+
+      var all = document.getElementById('expand-all');
+      all.addEventListener('click', function (e) {
+        e.preventDefault();
+        var folds = document.querySelectorAll('.fold');
+        var anyClosed = Array.prototype.some.call(folds, function (f) { return !f.open; });
+        Array.prototype.forEach.call(folds, function (f) { f.open = anyClosed; });
+        all.textContent = anyClosed ? 'Close every section' : 'Open every section';
+      });
+    })();
+  </script>
+</body>
+</html>
